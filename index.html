@@ -86,16 +86,16 @@
     </header>
 
     <main class="w-full max-w-md flex-grow flex flex-col items-center">
-        <div id="settlement-container" class="w-full py-4 settlement-card text-center flex flex-col items-center relative">
+        <div id="settlement-container" class="w-full py-4 settlement-card text-center flex flex-col items-center">
             <span class="text-slate-400 font-bold text-[10px] bg-slate-100 px-3 py-1 rounded-full uppercase tracking-widest">היישוב הנוכחי:</span>
-            <h1 id="settlement-name" class="text-5xl font-black text-slate-900 mt-3 tracking-tight">טוען נתונים...</h1>
-            
-            <div id="feedback-message" class="text-sm text-center rounded-xl px-4 py-2 mt-3 transition-opacity duration-300 w-full max-w-[280px] mx-auto opacity-0 hidden"></div>
-            
-            <button id="map-toggle-btn" class="mt-4 text-slate-600 text-xs font-bold border-2 border-slate-200 bg-white px-4 py-1.5 rounded-full shadow-sm transition-all hover:bg-slate-50 hidden" onclick="toggleMap()">
+            <h1 id="settlement-name" class="text-5xl font-black text-slate-900 mt-3 tracking-tight transition-opacity duration-300">טוען...</h1>
+        </div>
+
+        <div id="prev-panel" class="w-full max-w-sm mt-1 mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 flex flex-col items-center gap-2 hidden transition-all">
+            <div id="prev-feedback" class="text-xs text-slate-700 text-center font-medium leading-tight"></div>
+            <button id="map-toggle-btn" class="text-[11px] font-bold border border-slate-300 text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm transition-all hover:bg-slate-50" onclick="toggleMap()">
                 </button>
-            
-            <div id="map-wrapper" class="w-full max-w-sm mt-3 rounded-2xl overflow-hidden shadow-inner transition-all duration-300 h-0 opacity-0 pointer-events-none relative">
+            <div id="map-wrapper" class="w-full rounded-xl overflow-hidden shadow-inner transition-all duration-300 h-0 opacity-0 pointer-events-none relative">
                 <div id="map" class="w-full h-full bg-slate-200 z-10"></div>
             </div>
         </div>
@@ -125,7 +125,7 @@
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
                     <p><b>📏 חוקי מדידה חשובים:</b></p>
                     <ul class="list-disc list-inside space-y-1.5 text-slate-500 text-xs">
-                        <li><b>הכי רחוק מהמרכז:</b> נמדד אווירית אל מול תחנת <span class="text-slate-800 font-bold">רכבת השלום</span>.</li>
+                        <li><b>הכי רחוק מהמרכז:</b> נמדד אווירית אל מול תחנת <span class="text-slate-800 font-bold">רכבת השלום</span> בתל אביב.</li>
                         <li><b>רחוק מהים התיכון:</b> מרחק אל הים התיכון בלבד (לא כנרת/ים המלח).</li>
                         <li><b>הכי גבוה:</b> מחושב לפי גובה <span class="text-slate-800 font-bold">ממוצע</span> (על פי הלמ"ס).</li>
                         <li><b>השם הכי ארוך:</b> נספרות אותיות בלבד, <span class="text-slate-800 font-bold">ללא רווחים ומקפים</span>.</li>
@@ -133,7 +133,7 @@
                 </div>
                 
                 <p class="text-center text-xs text-slate-400 font-normal">
-                    * רוצים לדעת איפה היישוב במפה? הכפתור יופיע רק <b>אחרי</b> שתנחשו ויעבור לסיבוב הבא.
+                    * בסיום כל ניחוש תוכלו לראות איפה היישוב הקודם מוקם על המפה ומה הייתה הבחירה האופטימלית עבורו.
                 </p>
             </div>
             
@@ -29474,13 +29474,13 @@
   }
 ]
 
-        // מפה של הקטגוריות לנתונים הגולמיים ולפורמט התצוגה שלהם
+        // מפת נתונים לתצוגה בכרטיסיות
         const categoryDataMap = {
-            'דירוג צפוניות': { field: 'צפוניות', format: v => v.toLocaleString() + ' נ.צ' },
-            'דירוג מערביות': { field: 'מזרחיות', format: v => v.toLocaleString() + ' נ.צ' },
+            'דירוג צפוניות': { field: 'צפוניות', format: v => parseInt(String(v).replace(/,/g, '')).toLocaleString() + ' נ.צ' },
+            'דירוג מערביות': { field: 'מזרחיות', format: v => parseInt(String(v).replace(/,/g, '')).toLocaleString() + ' נ.צ' },
             'דירוג גובה ממוצע': { field: 'גובה ממוצע', format: v => v + " מ'" },
-            'דירוג מרחק מהים התיכון': { field: 'מרחק מהים התיכון', format: v => (parseFloat(v) / 1000).toFixed(1) + ' ק"מ' },
-            'דירוג מרחק מתחנת רכבת השלום': { field: 'מרחק מתחנת רכבת השלום', format: v => (parseFloat(v) / 1000).toFixed(1) + ' ק"מ' },
+            'דירוג מרחק מהים התיכון': { field: 'מרחק מהים התיכון', format: v => (parseFloat(String(v).replace(/,/g, '')) / 1000).toFixed(1) + ' ק"מ' },
+            'דירוג מרחק מתחנת רכבת השלום': { field: 'מרחק מתחנת רכבת השלום', format: v => (parseFloat(String(v).replace(/,/g, '')) / 1000).toFixed(1) + ' ק"מ' },
             'דירוג אוכלוסייה': { field: 'סך הכל אוכלוסייה 2024', format: v => parseInt(String(v).replace(/,/g, '')).toLocaleString() + ' תושבים' },
             'דירוג שנת יסוד': { field: 'שנת ייסוד', format: v => v == 1 ? 'קדום' : (v == 1800 ? 'ותיק' : v) },
             'דירוג אורך שם היישוב': { field: 'אורך שם היישוב', format: v => v + ' אותיות' }
@@ -29501,7 +29501,8 @@
         let totalScore = 0;
         let usedCategories = new Set();
         let currentSettlement = null;
-        let prevSettlement = null; 
+        let mapSettlement = null; // היישוב שיוצג בתיבת העבר
+        let prevOptimalMessage = ""; // ההודעה שתוצג
         let gameHistory = [];
         let bestScore = Infinity;
         
@@ -29510,7 +29511,7 @@
         let isMapOpen = false;
 
         function initGame() {
-            checkTutorial();
+            checkTutorial(); 
             createDots();
             if (!settlementsData.length) {
                 document.getElementById('settlement-name').innerText = "יש להדביק את ה-JSON בקוד";
@@ -29538,7 +29539,7 @@
             localStorage.setItem('israelGameTutorialSeen', 'true'); 
         }
 
-        // --- מפה ---
+        // --- מפה ופאנל העבר ---
         function toggleMap() {
             const wrapper = document.getElementById('map-wrapper');
             const btn = document.getElementById('map-toggle-btn');
@@ -29549,19 +29550,12 @@
                 wrapper.classList.remove('h-0', 'opacity-0', 'pointer-events-none');
                 wrapper.classList.add('h-48', 'opacity-100'); 
                 btn.innerHTML = '❌ סגור מפה';
-                btn.classList.add('bg-slate-100', 'border-transparent');
+                btn.classList.add('bg-white', 'border-slate-200');
                 
                 setTimeout(() => {
                     if(!map) {
-                        map = L.map('map', { 
-                            zoomControl: true, 
-                            scrollWheelZoom: true,
-                            dragging: true 
-                        }).setView([31.5, 34.8], 7);
-                        
-                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                            attribution: '© OSM'
-                        }).addTo(map);
+                        map = L.map('map', { zoomControl: true, scrollWheelZoom: true, dragging: true }).setView([31.5, 34.8], 7);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OSM' }).addTo(map);
                     }
                     map.invalidateSize();
                     updateMapView();
@@ -29569,17 +29563,17 @@
             } else {
                 wrapper.classList.remove('h-48', 'opacity-100');
                 wrapper.classList.add('h-0', 'opacity-0', 'pointer-events-none');
-                if (prevSettlement) {
-                    btn.innerHTML = `🗺️ איפה היה <b>${prevSettlement["שם יישוב"]}</b>?`;
+                if (mapSettlement) {
+                    btn.innerHTML = `🗺️ איפה זה <b>${mapSettlement["שם יישוב"]}</b>?`;
                 }
-                btn.classList.remove('bg-slate-100', 'border-transparent');
+                btn.classList.remove('bg-white', 'border-slate-200');
             }
         }
 
         function updateMapView() {
-            if (!map || !prevSettlement) return;
-            const lat = prevSettlement['lat'] || prevSettlement['קו רוחב'];
-            const lon = prevSettlement['lon'] || prevSettlement['קו אורך'];
+            if (!map || !mapSettlement) return;
+            const lat = mapSettlement['lat'] || mapSettlement['קו רוחב'];
+            const lon = mapSettlement['lon'] || mapSettlement['קו אורך'];
             
             if(lat && lon) {
                 if(marker) map.removeLayer(marker);
@@ -29628,18 +29622,24 @@
             if (currentRound > 8) { endGame(); return; }
             document.getElementById('round-display').innerText = `${currentRound} / 8`;
 
-            // הסתרת פידבק והכנת המסך
-            const feedbackEl = document.getElementById('feedback-message');
-            feedbackEl.classList.add('hidden', 'opacity-0');
-
-            if (isMapOpen) {
-                toggleMap();
+            // עדכון הפאנל הקבוע של היישוב הקודם (אם אנחנו בסיבוב 2 ומעלה)
+            const prevPanel = document.getElementById('prev-panel');
+            if (mapSettlement) {
+                prevPanel.classList.remove('hidden');
+                document.getElementById('prev-feedback').innerHTML = prevOptimalMessage;
+                
+                const mapBtn = document.getElementById('map-toggle-btn');
+                if (mapSettlement['lat'] || mapSettlement['קו רוחב']) {
+                    mapBtn.innerHTML = `🗺️ איפה זה <b>${mapSettlement["שם יישוב"]}</b>?`;
+                    mapBtn.classList.remove('hidden');
+                } else {
+                    mapBtn.classList.add('hidden');
+                }
+                
+                if(isMapOpen) toggleMap(); // סגירת מפה במעבר אוטומטי
             }
 
-            if (currentSettlement) {
-                prevSettlement = currentSettlement;
-            }
-
+            // הגרלת היישוב החדש
             let randomItem;
             do {
                 randomItem = settlementsData[Math.floor(Math.random() * settlementsData.length)];
@@ -29652,21 +29652,15 @@
             setTimeout(() => {
                 nameEl.innerText = currentSettlement["שם יישוב"];
                 nameEl.style.opacity = 1;
-                
-                const mapBtn = document.getElementById('map-toggle-btn');
-                if (prevSettlement && (prevSettlement['lat'] || prevSettlement['קו רוחב'])) {
-                    mapBtn.innerHTML = `🗺️ איפה היה <b>${prevSettlement["שם יישוב"]}</b>?`;
-                    mapBtn.classList.remove('hidden');
-                } else {
-                    mapBtn.classList.add('hidden');
-                }
             }, 200);
         }
 
         function selectCategory(cat) {
             if (usedCategories.has(cat.id)) return;
 
-            // מציאת הקטגוריה האופטימלית מבין אלו שעדיין פנויות (לפני שמוסיפים את הנוכחית)
+            // שמירת הנתונים לסיבוב הבא (לפאנל העבר)
+            mapSettlement = currentSettlement;
+
             let bestRank = Infinity;
             let bestCat = null;
             categories.forEach(c => {
@@ -29683,13 +29677,20 @@
             totalScore += currentRank;
             usedCategories.add(cat.id);
 
-            // עדכון צבע העיגול
+            // יצירת ההודעה שתוצג בסיבוב הבא בפאנל שלמעלה
+            if (currentRank === bestRank) {
+                prevOptimalMessage = `<span class="text-success font-bold text-sm">🎯 בחירה מושלמת עבור ${currentSettlement["שם יישוב"]}!</span>`;
+            } else {
+                prevOptimalMessage = `עבור <b>${currentSettlement["שם יישוב"]}</b>, היה כדאי לבחור ב-<b>${bestCat.label}</b> <span class="text-[10px] text-slate-400">(מקום ${bestRank})</span>`;
+            }
+
+            // צביעת עיגול
             const dot = document.getElementById(`dot-${currentRound - 1}`);
             if (currentRank <= 150) dot.className = "w-4 h-4 rounded-full bg-success shadow-lg dot scale-110";
             else if (currentRank <= 550) dot.className = "w-4 h-4 rounded-full bg-warning shadow-md dot scale-110";
             else dot.className = "w-4 h-4 rounded-full bg-danger dot shadow-sm";
 
-            // עיצוב מחדש של הכפתור כדי להציג את נתוני היישוב והערך
+            // הזרקת הנתון האמיתי לכרטיסייה (יישאר קבוע עד סוף המשחק)
             const btn = document.getElementById(`cat-${cat.id}`);
             const dataConfig = categoryDataMap[cat.id];
             const rawValue = currentSettlement[dataConfig.field];
@@ -29706,25 +29707,13 @@
                 <span class="text-primary font-black text-xs mt-1 bg-primary/10 px-2 py-0.5 rounded-full">מקום ${currentRank}</span>
             `;
 
-            // הצגת פידבק האם הבחירה הייתה הטובה ביותר
-            const feedbackEl = document.getElementById('feedback-message');
-            feedbackEl.classList.remove('hidden');
-            setTimeout(() => feedbackEl.classList.remove('opacity-0'), 10);
-
-            if (currentRank === bestRank) {
-                feedbackEl.innerHTML = `<span class="text-success font-bold text-base">🎯 בחירה מושלמת!</span>`;
-                feedbackEl.className = "text-sm text-center bg-green-100/50 border border-green-200 rounded-xl px-4 py-2 mt-3 transition-opacity duration-300 w-full max-w-xs mx-auto";
-            } else {
-                feedbackEl.innerHTML = `היית יכול לקבל מקום <b>${bestRank}</b> ב<b>${bestCat.label}</b>`;
-                feedbackEl.className = "text-sm text-center bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-2 mt-3 transition-opacity duration-300 w-full max-w-xs mx-auto text-slate-700";
-            }
-
             gameHistory.push({ name: currentSettlement["שם יישוב"], cat: cat.label, rank: currentRank, icon: cat.icon });
             document.getElementById('score-display').innerText = totalScore.toLocaleString();
 
             currentRound++;
-            // זמן המתנה מוארך כדי לאפשר קריאה של הפידבק והנתונים בכרטיס
-            setTimeout(nextRound, 2500);
+            
+            // זמן המתנה קצר - הפידבק כבר לא קופץ פה, הוא מחכה לסיבוב הבא!
+            setTimeout(nextRound, 1000);
         }
 
         function endGame() {
@@ -29760,7 +29749,7 @@
                          `הוצאתי ${totalScore} נקודות!\n` +
                          `${emojis}\n\n` +
                          `בואו נראה אתכם: ${url}\n` +
-                         `#משחק_היישובים @EyalFidel`; 
+                         `#משחק_היישובים #גאוגרפיה`; 
             
             if (navigator.share) {
                 navigator.share({ text });
