@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
-    <title>משחק היישובים של ישראל</title>
+    <title>משחק היישובים של ישראל | V3.2</title>
     <meta name="description" content="שחקו במשחק הדירוגים הגאוגרפי של ישראל. שני מצבי משחק, מפות וסיכומים!">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -203,7 +203,9 @@
            נתוני ה-JSON שלכם 
            ===================================================================== */
         
-        const easyData = [
+        // הדבק את ה-JSON של מצב קל ממש מתחת לשורה זו:
+        const easyData = 
+        [
   {
     "שם יישוב": "זמר",
     "מצב קל": 1,
@@ -6454,9 +6456,13 @@
     "lat": 33.269064,
     "ממוצע דירוגים": 64.75
   }
-];
+]
+        ; // אל תמחק את הנקודה-פסיק הזה!
 
-        const hardData = [
+
+        // הדבק את ה-JSON של מצב קשה (כל הארץ) ממש מתחת לשורה זו:
+        const hardData = 
+      [
   {
     "שם יישוב": "ירושלים",
     "סמל יישוב": 3000,
@@ -35761,7 +35767,9 @@
     "lat": 31.778837,
     "ממוצע דירוגים": 644.75
   }
-];
+]  
+        ; // אל תמחק את הנקודה-פסיק הזה!
+
 
         /* =====================================================================
            הגדרות בסיס 
@@ -35915,10 +35923,10 @@
             loadBestScore();
 
             currentDataset = diff === 'easy' ? easyData : hardData;
-            if (!currentDataset || currentDataset.length < 8) {
-                if (hardData && hardData.length >= 8) { currentDataset = hardData; diff = 'hard'; }
-                else if (easyData && easyData.length >= 8) { currentDataset = easyData; diff = 'easy'; }
-                else { alert("שגיאה: אין מספיק נתונים ב-JSON (נדרשים לפחות 8 יישובים)."); return; }
+            if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length < 8) {
+                if (hardData && Array.isArray(hardData) && hardData.length >= 8) { currentDataset = hardData; diff = 'hard'; }
+                else if (easyData && Array.isArray(easyData) && easyData.length >= 8) { currentDataset = easyData; diff = 'easy'; }
+                else { alert("שגיאה: הנתונים לא הודבקו כראוי או חסרים (נדרשים לפחות 8 יישובים)."); return; }
                 loadBestScore();
             }
 
@@ -35963,7 +35971,6 @@
         }
 
         function nextDrawRound() {
-            // עדכון חלונית היישוב הקודם
             const prevPanel = document.getElementById('draw-prev-panel');
             if (drawMapSettlement) {
                 prevPanel.classList.remove('hidden');
@@ -35977,7 +35984,6 @@
                 prevPanel.classList.add('hidden');
             }
 
-            // סיום משחק
             if (currentDrawIndex >= 8) { 
                 document.getElementById('draw-settlement-container').classList.add('hidden');
                 document.getElementById('draw-end-controls').classList.remove('hidden');
@@ -35985,7 +35991,6 @@
                 return; 
             }
 
-            // מעבר ליישוב הבא
             document.getElementById('round-display').innerText = `${currentDrawIndex + 1} / 8`;
             const currentSettlement = sessionSettlements[currentDrawIndex];
             
@@ -36168,13 +36173,12 @@
                 
                 gameHistory.push({ name: s["שם יישוב"], catLabel: cat.label, rank: rank, icon: cat.icon, obj: s });
 
-                // חשיפת הנתונים והדירוגים האמיתיים על הלוח!
                 const dataConfig = categoryDataMap[cat.id];
                 const formattedVal = dataConfig.format(s[dataConfig.field]);
                 const btn = document.getElementById(`place-cat-btn-${cat.id}`);
                 
                 if(btn) {
-                    btn.onclick = null; // ביטול אפשרות לחיצה והסרה
+                    btn.onclick = null; 
                     btn.classList.remove('scale-tap', 'slot-filled');
                     btn.classList.add('bg-white', 'border-transparent', 'shadow-sm');
                     btn.innerHTML = `
@@ -36196,9 +36200,7 @@
         /* =====================================================================
            מסך סיום ומפת סיכום (End Game)
            ===================================================================== */
-        function openEndGameModal() {
-            document.getElementById('modal').classList.remove('hidden');
-        }
+        function openEndGameModal() { document.getElementById('modal').classList.remove('hidden'); }
 
         function showEndGame() {
             openEndGameModal();
@@ -36224,7 +36226,7 @@
             setTimeout(() => {
                 const mapContainer = document.getElementById('end-map');
                 if(mapContainer._leaflet_id) {
-                    // מפה קיימת, לא ניצור מחדש
+                    // מפה קיימת
                 } else {
                     const endMapObj = L.map('end-map', { zoomControl: false, dragging: false, scrollWheelZoom: false });
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(endMapObj);
