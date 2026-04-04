@@ -129,16 +129,25 @@
                 <h2 class="text-2xl font-black text-slate-900">איך משחקים?</h2>
             </div>
             
-            <div class="text-slate-600 text-sm space-y-4 font-medium leading-relaxed">
+            <div class="text-slate-600 text-sm space-y-4 font-medium leading-relaxed h-80 overflow-y-auto pr-1">
                 <p>המשחק מורכב מ-<b>8 סיבובים</b>. המטרה היא לשבץ כל יישוב בקטגוריה בה הוא יקבל את <b>הדירוג הטוב ביותר</b> (מקום 1). <span class="text-primary font-bold">כל קטגוריה ניתנת לשימוש פעם אחת בלבד.</span></p>
                 
-                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2">
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
+                    <p><b>🕹️ מצבי המשחק:</b></p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-500">
+                        <li><b class="text-slate-700">מצב קל / קשה:</b> בקל יוגרלו רק 250 היישובים המוכרים והגדולים. בקשה תוגרל כל המדינה.</li>
+                        <li><b class="text-slate-700">הגרלה (1-1):</b> כל סיבוב מוגרל יישוב אחד שצריך לשבץ מיד.</li>
+                        <li><b class="text-slate-700">הצבה (8):</b> כל 8 היישובים מוגרלים מראש, ועליכם לחלק אותם אסטרטגית לקטגוריות השונות (כמו פאזל).</li>
+                    </ul>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
                     <p><b>📏 חוקי מדידה:</b></p>
-                    <ul class="list-disc list-inside space-y-1.5 text-slate-500 text-xs">
-                        <li><b>הכי רחוק מהמרכז:</b> נמדד אווירית אל מול תחנת <span class="text-slate-800 font-bold">רכבת השלום</span> בתל אביב.</li>
-                        <li><b>רחוק מהים התיכון:</b> מרחק אל הים התיכון בלבד (לא כנרת/ים המלח).</li>
-                        <li><b>הכי גבוה:</b> מחושב לפי גובה <span class="text-slate-800 font-bold">ממוצע</span> (למ"ס).</li>
-                        <li><b>השם הכי ארוך:</b> נספרות אותיות בלבד, <span class="text-slate-800 font-bold">ללא רווחים ומקפים</span>.</li>
+                    <ul class="list-disc list-inside space-y-1 text-slate-500">
+                        <li><b>הכי רחוק מהמרכז:</b> נמדד אווירית מתחנת <span class="text-slate-800 font-bold">רכבת השלום</span>.</li>
+                        <li><b>הכי רחוק מהים:</b> מרחק אל הים התיכון בלבד.</li>
+                        <li><b>הכי גבוה:</b> לפי גובה <span class="text-slate-800 font-bold">ממוצע</span> (למ"ס).</li>
+                        <li><b>שם ארוך:</b> ספירת אותיות בלבד, <span class="text-slate-800 font-bold">ללא רווחים ומקפים</span>.</li>
                     </ul>
                 </div>
             </div>
@@ -36198,28 +36207,33 @@
 
             setTimeout(() => {
                 const mapContainer = document.getElementById('end-map');
+                
+                // התיקון: איפוס ה-div כדי למנוע שמירת סמנים ממשחק קודם
                 if(mapContainer._leaflet_id) {
-                    // מפה קיימת
-                } else {
-                    const endMapObj = L.map('end-map', { zoomControl: false, dragging: false, scrollWheelZoom: false });
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(endMapObj);
-                    
-                    let bounds = [];
-                    gameHistory.forEach(h => {
-                        const lat = h.obj['lat'] || h.obj['קו רוחב'];
-                        const lon = h.obj['lon'] || h.obj['קו אורך'];
-                        if(lat && lon) {
-                            const marker = L.marker([lat, lon]).addTo(endMapObj);
-                            marker.bindPopup(`<div class="text-center" dir="rtl"><b>${h.name}</b><br><span class="text-[10px]">${h.icon} ${h.catLabel}<br>מקום ${h.rank}</span></div>`);
-                            bounds.push([lat, lon]);
-                        }
-                    });
-
-                    if(bounds.length > 0) {
-                        endMapObj.fitBounds(bounds, { padding: [20, 20] });
-                    } else {
-                        endMapObj.setView([31.5, 34.8], 7);
+                    mapContainer.outerHTML = '<div id="end-map" class="w-full h-full"></div>';
+                }
+                
+                const endMapObj = L.map('end-map', { zoomControl: false, dragging: false, scrollWheelZoom: false });
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(endMapObj);
+                
+                let bounds = [];
+                gameHistory.forEach(h => {
+                    const lat = h.obj['lat'] || h.obj['קו רוחב'];
+                    const lon = h.obj['lon'] || h.obj['קו אורך'];
+                    if(lat && lon) {
+                        const marker = L.marker([lat, lon]).addTo(endMapObj);
+                        marker.bindPopup(`<div class="text-center" dir="rtl"><b>${h.name}</b><br><span class="text-[10px]">${h.icon} ${h.catLabel}<br>מקום ${h.rank}</span></div>`);
+                        bounds.push([lat, lon]);
                     }
+                });
+
+                // התיקון של סעודיה: מכריח את המפה לחשב את הגודל שלה מחדש לפני המיקוד
+                endMapObj.invalidateSize();
+
+                if(bounds.length > 0) {
+                    endMapObj.fitBounds(bounds, { padding: [20, 20], maxZoom: 12 });
+                } else {
+                    endMapObj.setView([31.5, 34.8], 7);
                 }
             }, 300);
 
