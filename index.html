@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
-    <title>משחק היישובים של ישראל | V3</title>
+    <title>משחק היישובים של ישראל | V3.2</title>
     <meta name="description" content="שחקו במשחק הדירוגים הגאוגרפי של ישראל. שני מצבי משחק, מפות וסיכומים!">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -80,6 +80,11 @@
         </div>
 
         <div id="draw-categories" class="grid grid-cols-2 gap-3 w-full"></div>
+        
+        <div id="draw-end-controls" class="w-full flex gap-3 mt-6 mb-4 hidden">
+            <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
+            <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
+        </div>
     </div>
 
     <div id="place-screen" class="w-full max-w-md flex-col items-center flex-grow hidden">
@@ -88,7 +93,7 @@
             <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200">ערבב מחדש 🔄</button>
         </div>
 
-        <div class="w-full bg-white p-3 rounded-2xl shadow-sm border border-slate-100 mb-4">
+        <div id="place-bank-container" class="w-full bg-white p-3 rounded-2xl shadow-sm border border-slate-100 mb-4">
             <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest block text-center mb-2">בנק היישובים (לחץ לבחירה)</span>
             <div id="place-bank" class="flex flex-wrap justify-center gap-2"></div>
         </div>
@@ -98,6 +103,11 @@
         <button id="place-submit-btn" onclick="submitPlacement()" class="w-full bg-primary text-white text-xl font-black py-4 rounded-2xl shadow-xl hover:bg-cyan-700 scale-tap hidden">
             בדוק תוצאות! 🎯
         </button>
+
+        <div id="place-end-controls" class="w-full flex gap-3 mt-2 mb-4 hidden">
+            <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
+            <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
+        </div>
     </div>
 
     <div id="settings-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-[1000] hidden">
@@ -164,6 +174,10 @@
 
     <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-start p-4 z-[999] hidden overflow-y-auto">
         <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl mt-8 mb-8">
+            <button onclick="document.getElementById('modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors" title="סגור חלון וצפה בלוח">X</button>
+            
+            <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic">שיא חדש!</div>
+            
             <h2 class="text-3xl font-black text-slate-900 leading-tight">כל הכבוד!</h2>
             
             <div class="py-4 bg-slate-50 rounded-3xl border border-slate-100">
@@ -178,7 +192,7 @@
             <div id="round-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-40 border border-slate-100 shadow-inner"></div>
 
             <div class="space-y-3 pt-2">
-                <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-3 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
+                <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
                 <button onclick="initGame()" class="w-full text-slate-500 font-bold py-2 text-sm">משחק חדש</button>
             </div>
         </div>
@@ -187,10 +201,9 @@
     <script>
         /* =====================================================================
            נתוני ה-JSON שלכם 
-           (הדבק בין הסוגריים המרובעים. שים לב לא למחוק את ה-`[ ]`)
            ===================================================================== */
         
-        const easyData = [
+        const easyData = [[
   {
     "שם יישוב": "זמר",
     "מצב קל": 1,
@@ -35750,13 +35763,11 @@
   }
 ];
 
-
         /* =====================================================================
            הגדרות בסיס 
            ===================================================================== */
         const MAX_PENALTY = 600;
 
-        // פורמט בטוח שמונע קריסה גם אם חסר נתון ב-JSON
         const safeFormat = (val, formatter) => {
             if (val === undefined || val === null || val === '') return 'חסר נתון';
             try { return formatter(val); } catch(e) { return val; }
@@ -35815,9 +35826,7 @@
         };
 
         function checkTutorial() {
-            if (!localStorage.getItem('israelGameTutorialSeenV3')) {
-                openTutorial();
-            }
+            if (!localStorage.getItem('israelGameTutorialSeenV3')) { openTutorial(); }
         }
         function openTutorial() { document.getElementById('tutorial-modal').classList.remove('hidden'); }
         function closeTutorial() { 
@@ -35826,7 +35835,7 @@
         }
 
         /* =====================================================================
-           הגדרות ואיפוס (Settings)
+           הגדרות ואיפוס (Settings & Scoring)
            ===================================================================== */
         function openSettings() {
             tempDiff = diff;
@@ -35835,9 +35844,7 @@
             document.getElementById('settings-modal').classList.remove('hidden');
         }
 
-        function closeSettings() {
-            document.getElementById('settings-modal').classList.add('hidden');
-        }
+        function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
 
         function updateSettingsUI() {
             const dEasy = document.getElementById('set-diff-easy');
@@ -35870,14 +35877,30 @@
             }
         }
 
+        // --- ניהול שיאים דינמי לפי מצב ---
+        function getBestScoreKey() { return `israelGameBestV3_${diff}_${mode}`; }
+
+        function loadBestScore() {
+            const saved = localStorage.getItem(getBestScoreKey());
+            if (saved) {
+                bestScore = parseInt(saved);
+                document.getElementById('best-score-display').innerText = bestScore.toLocaleString();
+            } else {
+                bestScore = Infinity;
+                document.getElementById('best-score-display').innerText = '--';
+            }
+        }
+
         /* =====================================================================
            אתחול משחק
            ===================================================================== */
         function initGame() {
-            // איפוס UI ומשתנים
             document.getElementById('modal').classList.add('hidden');
             document.getElementById('draw-screen').classList.add('hidden');
             document.getElementById('place-screen').classList.add('hidden');
+            document.getElementById('draw-end-controls').classList.add('hidden');
+            document.getElementById('place-end-controls').classList.add('hidden');
+            document.getElementById('draw-settlement-container').classList.remove('hidden');
             
             totalScore = 0;
             gameHistory = [];
@@ -35891,23 +35914,18 @@
 
             loadBestScore();
 
-            // טעינת נתונים (עם מנגנון הגנה אם חסר JSON)
             currentDataset = diff === 'easy' ? easyData : hardData;
             if (!currentDataset || currentDataset.length < 8) {
-                // אם המערך הרצוי ריק, ננסה להשתמש בשני
                 if (hardData && hardData.length >= 8) { currentDataset = hardData; diff = 'hard'; }
                 else if (easyData && easyData.length >= 8) { currentDataset = easyData; diff = 'easy'; }
-                else { 
-                    alert("שגיאה: אין מספיק נתונים ב-JSON (נדרשים לפחות 8 יישובים). יש להדביק את הקבצים בקוד!"); 
-                    return; 
-                }
+                else { alert("שגיאה: אין מספיק נתונים ב-JSON (נדרשים לפחות 8 יישובים)."); return; }
+                loadBestScore();
             }
 
             let pool = [...currentDataset];
             pool.sort(() => 0.5 - Math.random());
             sessionSettlements = pool.slice(0, 8);
 
-            // הפעלת המסך המתאים
             if (mode === 'draw') {
                 document.getElementById('draw-screen').classList.remove('hidden');
                 document.getElementById('draw-screen').classList.add('flex');
@@ -35918,15 +35936,8 @@
                 document.getElementById('place-screen').classList.remove('hidden');
                 document.getElementById('place-screen').classList.add('flex');
                 document.getElementById('place-diff-label').innerText = diff === 'easy' ? '(קל)' : '(קשה)';
+                document.getElementById('place-bank-container').classList.remove('hidden');
                 initPlaceMode();
-            }
-        }
-
-        function loadBestScore() {
-            const saved = localStorage.getItem('israelGameBestV3');
-            if (saved) {
-                bestScore = parseInt(saved);
-                document.getElementById('best-score-display').innerText = bestScore.toLocaleString();
             }
         }
 
@@ -35952,11 +35963,7 @@
         }
 
         function nextDrawRound() {
-            if (currentDrawIndex >= 8) { showEndGame(); return; }
-            document.getElementById('round-display').innerText = `${currentDrawIndex + 1} / 8`;
-
-            const currentSettlement = sessionSettlements[currentDrawIndex];
-            
+            // עדכון חלונית היישוב הקודם
             const prevPanel = document.getElementById('draw-prev-panel');
             if (drawMapSettlement) {
                 prevPanel.classList.remove('hidden');
@@ -35965,12 +35972,23 @@
                     mapBtn.classList.remove('hidden');
                     mapBtn.innerHTML = `איפה זה <b>${drawMapSettlement["שם יישוב"]}</b>? 🗺️`;
                 } else mapBtn.classList.add('hidden');
-                
                 if(isDrawMapOpen) toggleDrawMap(); 
             } else {
                 prevPanel.classList.add('hidden');
             }
 
+            // סיום משחק
+            if (currentDrawIndex >= 8) { 
+                document.getElementById('draw-settlement-container').classList.add('hidden');
+                document.getElementById('draw-end-controls').classList.remove('hidden');
+                showEndGame(); 
+                return; 
+            }
+
+            // מעבר ליישוב הבא
+            document.getElementById('round-display').innerText = `${currentDrawIndex + 1} / 8`;
+            const currentSettlement = sessionSettlements[currentDrawIndex];
+            
             const nameEl = document.getElementById('draw-settlement-name');
             nameEl.style.opacity = 0;
             setTimeout(() => {
@@ -36067,6 +36085,7 @@
         function initPlaceMode() {
             renderPlaceBank();
             renderPlaceCategories();
+            document.getElementById('place-submit-btn').classList.add('hidden');
         }
 
         function renderPlaceBank() {
@@ -36104,7 +36123,7 @@
                 const assigned = placeAssignments[cat.id];
                 if (assigned) {
                     grid.innerHTML += `
-                        <button onclick="unplaceCategory('${cat.id}')" class="slot-filled p-3 rounded-2xl flex flex-col items-center justify-center border-2 transition-all min-h-[80px] relative scale-tap">
+                        <button id="place-cat-btn-${cat.id}" onclick="unplaceCategory('${cat.id}')" class="slot-filled p-3 rounded-2xl flex flex-col items-center justify-center border-2 transition-all min-h-[80px] relative scale-tap">
                             <span class="absolute top-1 left-2 text-danger font-bold text-xs opacity-50">x</span>
                             <span class="text-xl mb-1">${cat.icon}</span>
                             <span class="font-bold text-slate-500 text-[9px] uppercase">${cat.label}</span>
@@ -36113,7 +36132,7 @@
                     `;
                 } else {
                     grid.innerHTML += `
-                        <button onclick="placeInCategory('${cat.id}')" class="bg-white p-3 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300 transition-all hover:bg-slate-50 min-h-[80px] scale-tap text-slate-400">
+                        <button id="place-cat-btn-${cat.id}" onclick="placeInCategory('${cat.id}')" class="bg-white p-3 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300 transition-all hover:bg-slate-50 min-h-[80px] scale-tap text-slate-400">
                             <span class="text-2xl mb-1 opacity-50">${cat.icon}</span>
                             <span class="font-bold text-[10px] text-center uppercase">${cat.label}</span>
                             <span class="text-[9px] mt-1">(הצב כאן)</span>
@@ -36146,8 +36165,30 @@
                 let rank = parseInt(String(s[cat.id] || "1221").replace(/,/g, '')) || 1221;
                 rank = Math.min(rank, MAX_PENALTY);
                 totalScore += rank;
+                
                 gameHistory.push({ name: s["שם יישוב"], catLabel: cat.label, rank: rank, icon: cat.icon, obj: s });
+
+                // חשיפת הנתונים והדירוגים האמיתיים על הלוח!
+                const dataConfig = categoryDataMap[cat.id];
+                const formattedVal = dataConfig.format(s[dataConfig.field]);
+                const btn = document.getElementById(`place-cat-btn-${cat.id}`);
+                
+                if(btn) {
+                    btn.onclick = null; // ביטול אפשרות לחיצה והסרה
+                    btn.classList.remove('scale-tap', 'slot-filled');
+                    btn.classList.add('bg-white', 'border-transparent', 'shadow-sm');
+                    btn.innerHTML = `
+                        <div class="flex items-center gap-1 mb-1"><span class="text-sm">${cat.icon}</span><span class="text-[8px] font-bold text-slate-500 uppercase">${cat.label}</span></div>
+                        <span class="font-black text-slate-800 text-xs text-center">${s["שם יישוב"]}</span>
+                        <span class="font-bold text-slate-500 text-[9px] mt-0.5">${formattedVal}</span>
+                        <span class="text-primary font-black text-[10px] mt-1 bg-primary/10 px-2 py-0.5 rounded-full">מקום ${rank}</span>
+                    `;
+                }
             });
+
+            document.getElementById('place-submit-btn').classList.add('hidden');
+            document.getElementById('place-bank-container').classList.add('hidden');
+            document.getElementById('place-end-controls').classList.remove('hidden');
 
             showEndGame();
         }
@@ -36155,16 +36196,22 @@
         /* =====================================================================
            מסך סיום ומפת סיכום (End Game)
            ===================================================================== */
-        function showEndGame() {
-            document.getElementById('draw-screen').classList.add('hidden');
-            document.getElementById('place-screen').classList.add('hidden');
+        function openEndGameModal() {
             document.getElementById('modal').classList.remove('hidden');
+        }
 
+        function showEndGame() {
+            openEndGameModal();
             document.getElementById('final-score').innerText = totalScore.toLocaleString();
 
+            const recordBadge = document.getElementById('new-record-badge');
             if (totalScore < bestScore) {
-                localStorage.setItem('israelGameBestV3', totalScore);
+                bestScore = totalScore;
+                localStorage.setItem(getBestScoreKey(), totalScore);
                 document.getElementById('best-score-display').innerText = totalScore.toLocaleString();
+                recordBadge.classList.remove('hidden');
+            } else {
+                recordBadge.classList.add('hidden');
             }
 
             document.getElementById('round-history').innerHTML = gameHistory.map(h => `
@@ -36175,24 +36222,29 @@
             `).join('');
 
             setTimeout(() => {
-                const endMapObj = L.map('end-map', { zoomControl: false, dragging: false, scrollWheelZoom: false });
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(endMapObj);
-                
-                let bounds = [];
-                gameHistory.forEach(h => {
-                    const lat = h.obj['lat'] || h.obj['קו רוחב'];
-                    const lon = h.obj['lon'] || h.obj['קו אורך'];
-                    if(lat && lon) {
-                        const marker = L.marker([lat, lon]).addTo(endMapObj);
-                        marker.bindPopup(`<div class="text-center" dir="rtl"><b>${h.name}</b><br><span class="text-[10px]">${h.icon} ${h.catLabel}<br>מקום ${h.rank}</span></div>`);
-                        bounds.push([lat, lon]);
-                    }
-                });
-
-                if(bounds.length > 0) {
-                    endMapObj.fitBounds(bounds, { padding: [20, 20] });
+                const mapContainer = document.getElementById('end-map');
+                if(mapContainer._leaflet_id) {
+                    // מפה קיימת, לא ניצור מחדש
                 } else {
-                    endMapObj.setView([31.5, 34.8], 7);
+                    const endMapObj = L.map('end-map', { zoomControl: false, dragging: false, scrollWheelZoom: false });
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(endMapObj);
+                    
+                    let bounds = [];
+                    gameHistory.forEach(h => {
+                        const lat = h.obj['lat'] || h.obj['קו רוחב'];
+                        const lon = h.obj['lon'] || h.obj['קו אורך'];
+                        if(lat && lon) {
+                            const marker = L.marker([lat, lon]).addTo(endMapObj);
+                            marker.bindPopup(`<div class="text-center" dir="rtl"><b>${h.name}</b><br><span class="text-[10px]">${h.icon} ${h.catLabel}<br>מקום ${h.rank}</span></div>`);
+                            bounds.push([lat, lon]);
+                        }
+                    });
+
+                    if(bounds.length > 0) {
+                        endMapObj.fitBounds(bounds, { padding: [20, 20] });
+                    } else {
+                        endMapObj.setView([31.5, 34.8], 7);
+                    }
                 }
             }, 300);
 
