@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
-    <title>משחק היישובים של ישראל | V3.2</title>
+    <title>משחק היישובים של ישראל | V3.3</title>
     <meta name="description" content="שחקו במשחק הדירוגים הגאוגרפי של ישראל. שני מצבי משחק, מפות וסיכומים!">
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -34,7 +34,7 @@
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
 
-    <header class="w-full max-w-md space-y-4 mb-4 pt-2">
+    <header class="w-full max-w-md space-y-3 mb-3 pt-2">
         <div class="flex justify-between items-end px-1">
             <div>
                 <h1 class="text-3xl font-black text-slate-900 leading-none">משחק היישובים</h1>
@@ -42,7 +42,6 @@
             </div>
             
             <div class="flex items-center gap-2">
-                <button onclick="openSettings()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-primary transition-colors shadow-sm flex items-center justify-center text-lg leading-none active:scale-95" aria-label="הגדרות">⚙️</button>
                 <button onclick="openTutorial()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-primary transition-colors shadow-sm flex items-center justify-center text-lg leading-none active:scale-95" aria-label="איך משחקים?">❓</button>
                 <div class="text-left mr-1">
                     <span class="text-slate-400 text-[10px] uppercase font-bold block">שיא אישי🏆</span>
@@ -50,12 +49,23 @@
                 </div>
             </div>
         </div>
+
+        <div class="flex gap-2 w-full pt-1">
+            <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
+                <button id="inline-diff-easy" onclick="setDiff('easy')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🟢 קל</button>
+                <button id="inline-diff-hard" onclick="setDiff('hard')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🔴 קשה</button>
+            </div>
+            <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
+                <button id="inline-mode-draw" onclick="setMode('draw')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🎲 הגרלה</button>
+                <button id="inline-mode-place" onclick="setMode('place')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🧩 הצבה</button>
+            </div>
+        </div>
     </header>
 
     <div id="draw-screen" class="w-full max-w-md flex-col items-center flex-grow hidden">
         <div class="bg-white rounded-3xl shadow-sm p-3 mb-4 grid grid-cols-2 gap-4 border border-slate-100 w-full">
             <div class="text-center">
-                <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">סיבוב <span id="draw-diff-label" class="text-primary"></span></span>
+                <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">סיבוב <span id="draw-diff-label" class="text-primary hidden"></span></span>
                 <span id="round-display" class="text-xl font-black text-slate-800">1 / 8</span>
             </div>
             <div class="text-center border-r border-slate-100">
@@ -88,8 +98,8 @@
     </div>
 
     <div id="place-screen" class="w-full max-w-md flex-col items-center flex-grow hidden">
-        <div class="w-full flex justify-between items-center mb-4 pt-2">
-            <h1 class="text-2xl font-black text-slate-900">מצב הצבה <span id="place-diff-label" class="text-sm font-normal text-slate-500"></span></h1>
+        <div class="w-full flex justify-between items-center mb-3 pt-1">
+            <h1 class="text-xl font-black text-slate-800">מצב הצבה</h1>
             <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200">ערבב מחדש 🔄</button>
         </div>
 
@@ -107,39 +117,6 @@
         <div id="place-end-controls" class="w-full flex gap-3 mt-2 mb-4 hidden">
             <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
             <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
-        </div>
-    </div>
-
-    <div id="settings-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-[1000] hidden">
-        <div class="bg-white rounded-[32px] w-full max-w-sm p-6 relative shadow-2xl space-y-6">
-            <button onclick="closeSettings()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors">X</button>
-            
-            <div class="text-center mt-2 mb-4">
-                <span class="text-4xl block mb-2">⚙️</span>
-                <h2 class="text-2xl font-black text-slate-900">הגדרות משחק</h2>
-            </div>
-            
-            <div class="space-y-4">
-                <div class="space-y-2 text-center">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">רמת קושי</span>
-                    <div class="flex bg-slate-100 p-1 rounded-2xl relative w-full h-12">
-                        <button id="set-diff-easy" onclick="tempDiff='easy'; updateSettingsUI();" class="flex-1 rounded-xl font-bold text-sm z-10 transition-colors">קל (250 מוכרים)</button>
-                        <button id="set-diff-hard" onclick="tempDiff='hard'; updateSettingsUI();" class="flex-1 rounded-xl font-bold text-sm z-10 transition-colors">קשה (כל הארץ)</button>
-                    </div>
-                </div>
-
-                <div class="space-y-2 text-center">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">סגנון משחק</span>
-                    <div class="flex bg-slate-100 p-1 rounded-2xl relative w-full h-12">
-                        <button id="set-mode-draw" onclick="tempMode='draw'; updateSettingsUI();" class="flex-1 rounded-xl font-bold text-sm z-10 transition-colors">הגרלה (1-1)</button>
-                        <button id="set-mode-place" onclick="tempMode='place'; updateSettingsUI();" class="flex-1 rounded-xl font-bold text-sm z-10 transition-colors">הצבה (8)</button>
-                    </div>
-                </div>
-            </div>
-            
-            <button onclick="applySettings()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-slate-800 active:scale-95 transition-all text-lg mt-2">
-                החל והתחל מחדש
-            </button>
         </div>
     </div>
 
@@ -6462,7 +6439,7 @@
 
         // הדבק את ה-JSON של מצב קשה (כל הארץ) ממש מתחת לשורה זו:
         const hardData = 
-      [
+        [
   {
     "שם יישוב": "ירושלים",
     "סמל יישוב": 3000,
@@ -35767,9 +35744,8 @@
     "lat": 31.778837,
     "ממוצע דירוגים": 644.75
   }
-]  
+]
         ; // אל תמחק את הנקודה-פסיק הזה!
-
 
         /* =====================================================================
            הגדרות בסיס 
@@ -35808,9 +35784,6 @@
            ===================================================================== */
         let diff = 'easy'; 
         let mode = 'draw'; 
-        
-        let tempDiff = 'easy';
-        let tempMode = 'draw';
 
         let currentDataset = [];
         let sessionSettlements = [];
@@ -35830,6 +35803,7 @@
 
         window.onload = () => {
             checkTutorial();
+            updateInlineButtonsUI();
             initGame();
         };
 
@@ -35843,49 +35817,50 @@
         }
 
         /* =====================================================================
-           הגדרות ואיפוס (Settings & Scoring)
+           שליטה מהירה במצבים (Inline)
            ===================================================================== */
-        function openSettings() {
-            tempDiff = diff;
-            tempMode = mode;
-            updateSettingsUI();
-            document.getElementById('settings-modal').classList.remove('hidden');
+        function setDiff(newDiff) {
+            if (diff === newDiff) return; // לא השתנה
+            if (currentDrawIndex > 0 || Object.keys(placeAssignments).length > 0) {
+                if (!confirm("החלפת רמת קושי תתחיל משחק חדש. להמשיך?")) return;
+            }
+            diff = newDiff;
+            updateInlineButtonsUI();
+            initGame();
         }
 
-        function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+        function setMode(newMode) {
+            if (mode === newMode) return; // לא השתנה
+            if (currentDrawIndex > 0 || Object.keys(placeAssignments).length > 0) {
+                if (!confirm("החלפת סגנון תתחיל משחק חדש. להמשיך?")) return;
+            }
+            mode = newMode;
+            updateInlineButtonsUI();
+            initGame();
+        }
 
-        function updateSettingsUI() {
-            const dEasy = document.getElementById('set-diff-easy');
-            const dHard = document.getElementById('set-diff-hard');
-            if (tempDiff === 'easy') {
-                dEasy.className = "flex-1 rounded-xl font-bold text-sm z-10 transition-colors bg-success text-white shadow-md";
-                dHard.className = "flex-1 rounded-xl font-bold text-sm z-10 transition-colors text-slate-500";
+        function updateInlineButtonsUI() {
+            const btnDEasy = document.getElementById('inline-diff-easy');
+            const btnDHard = document.getElementById('inline-diff-hard');
+            if (diff === 'easy') {
+                btnDEasy.className = "flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm bg-white text-success border border-slate-200";
+                btnDHard.className = "flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors text-slate-500";
             } else {
-                dHard.className = "flex-1 rounded-xl font-bold text-sm z-10 transition-colors bg-danger text-white shadow-md";
-                dEasy.className = "flex-1 rounded-xl font-bold text-sm z-10 transition-colors text-slate-500";
+                btnDHard.className = "flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm bg-white text-danger border border-slate-200";
+                btnDEasy.className = "flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors text-slate-500";
             }
 
-            const mDraw = document.getElementById('set-mode-draw');
-            const mPlace = document.getElementById('set-mode-place');
-            if (tempMode === 'draw') {
-                mDraw.className = "flex-1 rounded-xl font-bold text-sm z-10 transition-colors bg-primary text-white shadow-md";
-                mPlace.className = "flex-1 rounded-xl font-bold text-sm z-10 transition-colors text-slate-500";
+            const btnMDraw = document.getElementById('inline-mode-draw');
+            const btnMPlace = document.getElementById('inline-mode-place');
+            if (mode === 'draw') {
+                btnMDraw.className = "flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm bg-white text-primary border border-slate-200";
+                btnMPlace.className = "flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors text-slate-500";
             } else {
-                mPlace.className = "flex-1 rounded-xl font-bold text-sm z-10 transition-colors bg-accent text-white shadow-md";
-                mDraw.className = "flex-1 rounded-xl font-bold text-sm z-10 transition-colors text-slate-500";
+                btnMPlace.className = "flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm bg-white text-accent border border-slate-200";
+                btnMDraw.className = "flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors text-slate-500";
             }
         }
 
-        function applySettings() {
-            if (confirm("אתה בטוח שאתה רוצה לשנות הגדרות? המשחק הנוכחי יסתיים ויתחיל משחק חדש.")) {
-                diff = tempDiff;
-                mode = tempMode;
-                closeSettings();
-                initGame();
-            }
-        }
-
-        // --- ניהול שיאים דינמי לפי מצב ---
         function getBestScoreKey() { return `israelGameBestV3_${diff}_${mode}`; }
 
         function loadBestScore() {
@@ -35924,8 +35899,8 @@
 
             currentDataset = diff === 'easy' ? easyData : hardData;
             if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length < 8) {
-                if (hardData && Array.isArray(hardData) && hardData.length >= 8) { currentDataset = hardData; diff = 'hard'; }
-                else if (easyData && Array.isArray(easyData) && easyData.length >= 8) { currentDataset = easyData; diff = 'easy'; }
+                if (hardData && Array.isArray(hardData) && hardData.length >= 8) { currentDataset = hardData; diff = 'hard'; updateInlineButtonsUI(); }
+                else if (easyData && Array.isArray(easyData) && easyData.length >= 8) { currentDataset = easyData; diff = 'easy'; updateInlineButtonsUI(); }
                 else { alert("שגיאה: הנתונים לא הודבקו כראוי או חסרים (נדרשים לפחות 8 יישובים)."); return; }
                 loadBestScore();
             }
@@ -35937,13 +35912,11 @@
             if (mode === 'draw') {
                 document.getElementById('draw-screen').classList.remove('hidden');
                 document.getElementById('draw-screen').classList.add('flex');
-                document.getElementById('draw-diff-label').innerText = diff === 'easy' ? '(קל)' : '(קשה)';
                 document.getElementById('draw-score').innerText = '0';
                 initDrawMode();
             } else {
                 document.getElementById('place-screen').classList.remove('hidden');
                 document.getElementById('place-screen').classList.add('flex');
-                document.getElementById('place-diff-label').innerText = diff === 'easy' ? '(קל)' : '(קשה)';
                 document.getElementById('place-bank-container').classList.remove('hidden');
                 initPlaceMode();
             }
