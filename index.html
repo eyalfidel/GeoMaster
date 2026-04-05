@@ -35997,17 +35997,20 @@
             categories.forEach(c => {
                 if (!usedDrawCats.has(c.id) || c.id === catId) {
                     let r = parseInt(String(currentSettlement[c.id] || "1221").replace(/,/g, '')) || 1221;
-                    r = Math.min(r, MAX_PENALTY);
                     if (r < bestRank) { bestRank = r; bestCatLabel = c.label; }
                 }
             });
 
-            let rank = parseInt(String(currentSettlement[catId] || "1221").replace(/,/g, '')) || 1221;
-            rank = Math.min(rank, MAX_PENALTY);
-            totalScore += rank;
+            // פיצול בין דירוג אמיתי לקנס הנקודות
+            let actualRank = parseInt(String(currentSettlement[catId] || "1221").replace(/,/g, '')) || 1221;
+            let penalty = Math.min(actualRank, MAX_PENALTY);
+            totalScore += penalty;
+
+            // יצירת הכיתוב
+            let rankText = actualRank > MAX_PENALTY ? `מקום ${actualRank} (${MAX_PENALTY} נק')` : `מקום ${actualRank}`;
 
             const dot = document.getElementById(`draw-dot-${currentDrawIndex}`);
-            dot.className = `w-3 h-3 rounded-full shadow-md scale-110 ${rank <= 150 ? 'bg-success' : rank <= 400 ? 'bg-warning' : 'bg-danger'}`;
+            dot.className = `w-3 h-3 rounded-full shadow-md scale-110 ${actualRank <= 150 ? 'bg-success' : actualRank <= 400 ? 'bg-warning' : 'bg-danger'}`;
 
             const btn = document.getElementById(`draw-cat-${catId}`);
             btn.disabled = true;
@@ -36018,17 +36021,17 @@
                 <div class="flex items-center gap-1 mb-1"><span class="text-sm">${catObj.icon}</span><span class="text-[8px] font-bold text-slate-500 uppercase">${catObj.label}</span></div>
                 <span class="font-black text-slate-800 text-xs text-center">${currentSettlement["שם יישוב"]}</span>
                 <span class="font-bold text-slate-500 text-[9px] mt-0.5">${formattedVal}</span>
-                <span class="text-primary font-black text-[10px] mt-1 bg-primary/10 px-2 py-0.5 rounded-full">מקום ${rank}</span>
+                <span class="text-primary font-black text-[10px] mt-1 bg-primary/10 px-2 py-0.5 rounded-full" dir="rtl">${rankText}</span>
             `;
 
             const feedbackEl = document.getElementById('draw-prev-feedback');
-            if (rank === bestRank) {
+            if (actualRank === bestRank) {
                 feedbackEl.innerHTML = `<span class="text-success font-bold">🎯 מעולה! בחרת אופטימלי עבור ${currentSettlement["שם יישוב"]}</span>`;
             } else {
                 feedbackEl.innerHTML = `עבור ${currentSettlement["שם יישוב"]}, מוטב היה לבחור <b>${bestCatLabel}</b> (מקום ${bestRank})`;
             }
 
-            gameHistory.push({ name: currentSettlement["שם יישוב"], catLabel: catObj.label, rank: rank, icon: catObj.icon, obj: currentSettlement });
+            gameHistory.push({ name: currentSettlement["שם יישוב"], catLabel: catObj.label, actualRank: actualRank, rankText: rankText, icon: catObj.icon, obj: currentSettlement });
             document.getElementById('draw-score').innerText = totalScore.toLocaleString();
 
             currentDrawIndex++;
@@ -36149,11 +36152,14 @@
 
             categories.forEach(cat => {
                 const s = placeAssignments[cat.id];
-                let rank = parseInt(String(s[cat.id] || "1221").replace(/,/g, '')) || 1221;
-                rank = Math.min(rank, MAX_PENALTY);
-                totalScore += rank;
                 
-                gameHistory.push({ name: s["שם יישוב"], catLabel: cat.label, rank: rank, icon: cat.icon, obj: s });
+                let actualRank = parseInt(String(s[cat.id] || "1221").replace(/,/g, '')) || 1221;
+                let penalty = Math.min(actualRank, MAX_PENALTY);
+                totalScore += penalty;
+                
+                let rankText = actualRank > MAX_PENALTY ? `מקום ${actualRank} (${MAX_PENALTY} נק')` : `מקום ${actualRank}`;
+                
+                gameHistory.push({ name: s["שם יישוב"], catLabel: cat.label, actualRank: actualRank, rankText: rankText, icon: cat.icon, obj: s });
 
                 const dataConfig = categoryDataMap[cat.id];
                 const formattedVal = dataConfig.format(s[dataConfig.field]);
@@ -36167,7 +36173,7 @@
                         <div class="flex items-center gap-1 mb-1"><span class="text-sm">${cat.icon}</span><span class="text-[8px] font-bold text-slate-500 uppercase">${cat.label}</span></div>
                         <span class="font-black text-slate-800 text-xs text-center">${s["שם יישוב"]}</span>
                         <span class="font-bold text-slate-500 text-[9px] mt-0.5">${formattedVal}</span>
-                        <span class="text-primary font-black text-[10px] mt-1 bg-primary/10 px-2 py-0.5 rounded-full">מקום ${rank}</span>
+                        <span class="text-primary font-black text-[10px] mt-1 bg-primary/10 px-2 py-0.5 rounded-full" dir="rtl">${rankText}</span>
                     `;
                 }
             });
@@ -36201,7 +36207,7 @@
             document.getElementById('round-history').innerHTML = gameHistory.map(h => `
                 <div class="flex justify-between border-b border-slate-200 pb-1 italic">
                     <span>${h.icon} <b>${h.name}</b> (${h.catLabel})</span>
-                    <span class="font-black text-primary">${h.rank}</span>
+                    <span class="font-black text-primary">${h.rankText}</span>
                 </div>
             `).join('');
 
@@ -36222,7 +36228,7 @@
                     const lon = h.obj['lon'] || h.obj['קו אורך'];
                     if(lat && lon) {
                         const marker = L.marker([lat, lon]).addTo(endMapObj);
-                        marker.bindPopup(`<div class="text-center" dir="rtl"><b>${h.name}</b><br><span class="text-[10px]">${h.icon} ${h.catLabel}<br>מקום ${h.rank}</span></div>`);
+                        marker.bindPopup(`<div class="text-center" dir="rtl"><b>${h.name}</b><br><span class="text-[10px]">${h.icon} ${h.catLabel}<br>מקום ${h.rankText}</span></div>`);
                         bounds.push([lat, lon]);
                     }
                 });
@@ -36241,7 +36247,7 @@
         }
 
         function shareResults() {
-            const emojis = gameHistory.map(h => h.rank < 150 ? '🟩' : h.rank < 400 ? '🟨' : '🟥').join('');
+            const emojis = gameHistory.map(h => h.actualRank < 150 ? '🟩' : h.actualRank < 400 ? '🟨' : '🟥').join('');
             const text = `משחק היישובים V3 📍\n` +
                          `מצב: ${diff === 'easy' ? 'קל' : 'קשה'} | ${mode === 'draw' ? 'הגרלה' : 'הצבה'}\n` +
                          `תוצאה: ${totalScore} נק'\n` +
