@@ -36221,7 +36221,7 @@
                     mapContainer.outerHTML = '<div id="end-map" class="w-full h-full"></div>';
                 }
                 
-                const endMapObj = L.map('end-map', { zoomControl: false, dragging: false, scrollWheelZoom: false });
+                const endMapObj = L.map('end-map', { zoomControl: true, dragging: true, scrollWheelZoom: true });
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(endMapObj);
                 
                 let bounds = [];
