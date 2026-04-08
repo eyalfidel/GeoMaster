@@ -36255,10 +36255,10 @@
                         allDataHtml += `</div>`;
 
                         const popupContent = `<div class="text-center min-w-[160px]" dir="rtl">
-                            <b class="text-sm text-slate-800">${h.name}</b><br>
-                            <div class="flex items-center justify-center gap-1 text-[11px] text-primary font-bold mb-1">
-                            <span>${h.icon}</span>
-                            <span>בחרת: ${h.rankText}</span>
+                            <b class="text-sm text-slate-800">${h.name}</b>
+                            <div class="flex items-center justify-center gap-1 text-[11px] text-primary font-bold mt-1 mb-1" dir="rtl">
+                                <span>${h.icon}</span>
+                                <span>בחרת: ${h.catLabel} (${h.rankText})</span>
                             </div>
                             ${allDataHtml}
                         </div>`;
