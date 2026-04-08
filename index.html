@@ -36207,13 +36207,17 @@
                 recordBadge.classList.add('hidden');
             }
 
-            // הוספנו פה אינדקס ללולאה, ואת אירוע הלחיצה (focusEndMapMarker)
             document.getElementById('round-history').innerHTML = gameHistory.map((h, index) => `
                 <div class="flex justify-between border-b border-slate-200 pb-1 italic cursor-pointer hover:bg-slate-200 transition-colors px-2 py-1 rounded-md" onclick="focusEndMapMarker(${index})">
                     <span>${h.icon} <b>${h.name}</b> (${h.catLabel})</span>
                     <span class="font-black text-primary">${h.rankText}</span>
                 </div>
             `).join('');
+
+            // הגדלת המפה אוטומטית כדי שיהיה מקום לפופ-אפ המפורט!
+            const mapWrapper = document.getElementById('end-map').parentElement;
+            mapWrapper.classList.remove('h-48');
+            mapWrapper.classList.add('h-72');
 
             setTimeout(() => {
                 const mapContainer = document.getElementById('end-map');
@@ -36225,19 +36229,42 @@
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(endMapObj);
                 
                 let bounds = [];
-                endMarkers = []; // איפוס מערך הסמנים למשחק הנוכחי
+                endMarkers = []; 
 
                 gameHistory.forEach(h => {
                     const lat = h.obj['lat'] || h.obj['קו רוחב'];
                     const lon = h.obj['lon'] || h.obj['קו אורך'];
                     if(lat && lon) {
                         const marker = L.marker([lat, lon]).addTo(endMapObj);
-                        // תיקון ה"מקום מקום" נמצא כאן: הורדנו את המילה המוקלדת
-                        marker.bindPopup(`<div class="text-center" dir="rtl"><b>${h.name}</b><br><span class="text-[10px]">${h.icon} ${h.catLabel}<br>${h.rankText}</span></div>`);
+                        
+                        // בניית רשימת כל הנתונים של היישוב
+                        let allDataHtml = `<div class="text-right text-[10px] mt-2 pt-2 border-t border-slate-200 space-y-1 h-28 overflow-y-auto pr-1">`;
+                        categories.forEach(c => {
+                            const dataConfig = categoryDataMap[c.id];
+                            const rawVal = h.obj[dataConfig.field];
+                            const formatted = dataConfig.format(rawVal);
+                            let rankVal = parseInt(String(h.obj[c.id] || "1221").replace(/,/g, '')) || 1221;
+                            
+                            // הדגשת הקטגוריה שנבחרה במשחק
+                            if (c.label === h.catLabel) {
+                                allDataHtml += `<div class="text-primary font-bold bg-primary/10 rounded px-1 py-0.5">${c.icon} ${c.label}: ${formatted} (#${rankVal})</div>`;
+                            } else {
+                                allDataHtml += `<div class="text-slate-600 px-1">${c.icon} ${c.label}: ${formatted} (#${rankVal})</div>`;
+                            }
+                        });
+                        allDataHtml += `</div>`;
+
+                        const popupContent = `<div class="text-center min-w-[160px]" dir="rtl">
+                            <b class="text-sm text-slate-800">${h.name}</b><br>
+                            <span class="text-[11px] text-primary font-bold">${h.icon} בחרת: ${h.rankText}</span>
+                            ${allDataHtml}
+                        </div>`;
+                        
+                        marker.bindPopup(popupContent);
                         bounds.push([lat, lon]);
                         endMarkers.push(marker);
                     } else {
-                        endMarkers.push(null); // שומר על הסדר גם אם חסר נתון
+                        endMarkers.push(null); 
                     }
                 });
 
@@ -36256,11 +36283,19 @@
         function focusEndMapMarker(idx) {
             if (endMapObj && endMarkers[idx]) {
                 const marker = endMarkers[idx];
-                endMapObj.flyTo(marker.getLatLng(), 12, { animate: true, duration: 1 });
-                marker.openPopup();
                 
-                // גלילה חלקה למפה כדי שהשחקן יראה את הקפיצה (שימושי במובייל)
-                document.getElementById('end-map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // חישוב היסט (Offset) גאוני: מזיזים את המצלמה 120 פיקסלים צפונה, ככה היישוב יושב למטה והפופ-אפ לא נחתך
+                const targetZoom = 11;
+                const targetPoint = endMapObj.project(marker.getLatLng(), targetZoom).subtract([0, 120]); 
+                const targetLatLng = endMapObj.unproject(targetPoint, targetZoom);
+                
+                endMapObj.flyTo(targetLatLng, targetZoom, { animate: true, duration: 1 });
+                
+                // פתיחת הפופ-אפ מיד אחרי תחילת התעופה
+                setTimeout(() => { marker.openPopup(); }, 250);
+                
+                // גולל את המסך כך שהמפה תהיה במרכז (חשוב במובייל כשהרשימה ארוכה)
+                document.getElementById('end-map').parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
