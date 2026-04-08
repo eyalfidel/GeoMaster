@@ -36256,7 +36256,10 @@
 
                         const popupContent = `<div class="text-center min-w-[160px]" dir="rtl">
                             <b class="text-sm text-slate-800">${h.name}</b><br>
-                            <span class="text-[11px] text-primary font-bold">${h.icon} בחרת: ${h.rankText}</span>
+                            <div class="flex items-center justify-center gap-1 text-[11px] text-primary font-bold mb-1">
+                            <span>${h.icon}</span>
+                            <span>בחרת: ${h.rankText}</span>
+                            </div>
                             ${allDataHtml}
                         </div>`;
                         
