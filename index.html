@@ -181,11 +181,33 @@
 
             <div class="space-y-3 pt-2">
                 <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
+                
+                <button onclick="showOptimalGame()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 scale-tap">
+                    המשחק האופטימלי 💡
+                </button>
+
                 <button onclick="initGame()" class="w-full text-slate-500 font-bold py-2 text-sm">משחק חדש</button>
             </div>
         </div>
     </div>
 
+    <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-start p-4 z-[1000] hidden overflow-y-auto">
+        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl mt-8 mb-8">
+            <button onclick="document.getElementById('optimal-modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors">X</button>
+            
+            <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
+            <p class="text-xs text-slate-500 font-medium">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
+            
+            <div class="py-3 bg-success/10 rounded-3xl border border-success/20">
+                <span class="text-success text-[10px] font-bold uppercase tracking-widest">ציון אופטימלי אפשרי</span>
+                <div id="optimal-score" class="text-5xl font-black text-success tracking-tighter">0</div>
+            </div>
+
+            <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-60 border border-slate-100 shadow-inner">
+                </div>
+        </div>
+    </div>
+    
     <script>
         /* =====================================================================
            נתוני ה-JSON שלכם 
@@ -36314,6 +36336,72 @@
             else { navigator.clipboard.writeText(text); alert("הועתק ללוח!"); }
         }
 
+        /* =====================================================================
+           מחשבון התוצאה האופטימלית (Branch and Bound Algorithm)
+           ===================================================================== */
+        function showOptimalGame() {
+            const n = sessionSettlements.length;
+            let minScore = Infinity;
+            let bestAssignment = [];
+            
+            // יצירת מטריצת המחירים (דירוגים)
+            const costs = [];
+            for (let i = 0; i < n; i++) {
+                costs[i] = [];
+                for (let j = 0; j < categories.length; j++) {
+                    let rank = parseInt(String(sessionSettlements[i][categories[j].id] || "1221").replace(/,/g, '')) || 1221;
+                    costs[i][j] = Math.min(rank, MAX_PENALTY);
+                }
+            }
+
+            // פונקציה רקורסיבית למציאת מינימום מהיר
+            function solve(settlementIdx, currentScore, currentAssignment, usedCategories) {
+                // גיזום: אם כבר עברנו את המינימום שמצאנו, אין טעם להמשיך בענף הזה
+                if (currentScore >= minScore) return; 
+                
+                // הגענו לסוף הענף ומצאנו תוצאה טובה יותר
+                if (settlementIdx === n) {
+                    minScore = currentScore;
+                    bestAssignment = [...currentAssignment];
+                    return;
+                }
+
+                for (let c = 0; c < n; c++) {
+                    if (!usedCategories[c]) {
+                        usedCategories[c] = true;
+                        currentAssignment.push(c);
+                        solve(settlementIdx + 1, currentScore + costs[settlementIdx][c], currentAssignment, usedCategories);
+                        currentAssignment.pop();
+                        usedCategories[c] = false;
+                    }
+                }
+            }
+
+            // הפעלת החישוב
+            solve(0, 0, [], Array(n).fill(false));
+
+            // הצגת הנתונים בחלונית
+            document.getElementById('optimal-score').innerText = minScore.toLocaleString();
+            
+            const optimalHtml = bestAssignment.map((catIdx, sIdx) => {
+                const s = sessionSettlements[sIdx];
+                const cat = categories[catIdx];
+                const rank = costs[sIdx][catIdx];
+                
+                // במקרה האמיתי יכול להיות שהיישוב מעל התקרה, אז נציג כראוי
+                let actualRank = parseInt(String(s[cat.id] || "1221").replace(/,/g, '')) || 1221;
+                let rankText = actualRank > MAX_PENALTY ? `מקום ${actualRank} (${MAX_PENALTY} נק')` : `מקום ${actualRank}`;
+
+                return `
+                <div class="flex justify-between border-b border-slate-200 pb-1.5 pt-1">
+                    <span>${cat.icon} <b>${s["שם יישוב"]}</b> (${cat.label})</span>
+                    <span class="font-black text-success">${rankText}</span>
+                </div>`;
+            }).join('');
+
+            document.getElementById('optimal-history').innerHTML = optimalHtml;
+            document.getElementById('optimal-modal').classList.remove('hidden');
+        }
     </script>
 </body>
 </html>
