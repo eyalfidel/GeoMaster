@@ -36339,6 +36339,9 @@
         /* =====================================================================
            מחשבון התוצאה האופטימלית (Branch and Bound Algorithm)
            ===================================================================== */
+        /* =====================================================================
+           מחשבון התוצאה האופטימלית (Branch and Bound Algorithm)
+           ===================================================================== */
         function showOptimalGame() {
             const n = sessionSettlements.length;
             let minScore = Infinity;
@@ -36386,16 +36389,30 @@
             const optimalHtml = bestAssignment.map((catIdx, sIdx) => {
                 const s = sessionSettlements[sIdx];
                 const cat = categories[catIdx];
-                const rank = costs[sIdx][catIdx];
                 
-                // במקרה האמיתי יכול להיות שהיישוב מעל התקרה, אז נציג כראוי
+                // חישוב הדירוג האופטימלי
                 let actualRank = parseInt(String(s[cat.id] || "1221").replace(/,/g, '')) || 1221;
                 let rankText = actualRank > MAX_PENALTY ? `מקום ${actualRank} (${MAX_PENALTY} נק')` : `מקום ${actualRank}`;
 
+                // שליפת הבחירה של השחקן מהיסטוריית המשחק לצורך השוואה
+                const userChoice = gameHistory.find(h => h.name === s["שם יישוב"]);
+                let comparisonHtml = "";
+                
+                if (userChoice) {
+                    if (userChoice.catLabel === cat.label) {
+                        comparisonHtml = `<div class="text-[10px] text-success font-bold mt-1 bg-success/10 inline-block px-2 py-0.5 rounded-full">✅ שיחקת אותה! בחרת אופטימלי</div>`;
+                    } else {
+                        comparisonHtml = `<div class="text-[10px] text-slate-500 mt-1">במשחק שלך: ${userChoice.icon} ${userChoice.catLabel} <span class="text-danger font-bold">(${userChoice.rankText})</span></div>`;
+                    }
+                }
+
                 return `
-                <div class="flex justify-between border-b border-slate-200 pb-1.5 pt-1">
-                    <span>${cat.icon} <b>${s["שם יישוב"]}</b> (${cat.label})</span>
-                    <span class="font-black text-success">${rankText}</span>
+                <div class="border-b border-slate-200 pb-2 pt-1.5 flex flex-col items-start">
+                    <div class="flex justify-between w-full items-center">
+                        <span>${cat.icon} <b>${s["שם יישוב"]}</b> (${cat.label})</span>
+                        <span class="font-black text-success">${rankText}</span>
+                    </div>
+                    ${comparisonHtml}
                 </div>`;
             }).join('');
 
