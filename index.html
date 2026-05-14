@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
     <title>משחק היישובים של ישראל | V3.3</title>
     <meta name="description" content="שחקו במשחק הדירוגים הגאוגרפי של ישראל. שני מצבי משחק, מפות וסיכומים!">
+    
+    <!-- תיקון קריטי למובייל: הגדרה ראשונית לפני הכל -->
+    <style>
+        .hidden { display: none !important; }
+        #loading-overlay { display: flex !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; background: #0f172a !important; }
+    </style>
+
     <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png" type="image/png">
     <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png">
     <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png">
@@ -26,9 +33,6 @@
     </script>
 
     <style>
-        /* תיקון קריטי למובייל - מבטיח שאלמנטים שצריכים להיות מוסתרים יוסתרו מיד */
-        .hidden { display: none !important; }
-        
         body { font-family: 'Heebo', sans-serif; background-color: #f8fafc; user-select: none; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .scale-tap:active { transform: scale(0.96); }
         .selected-bank-item { outline: 3px solid #0891b2; background-color: #e0f2fe; transform: scale(1.05); }
@@ -39,8 +43,7 @@
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
 
-    <!-- מסך טעינה עם הגדרות תצוגה קבועות מראש למניעת קפיצות -->
-    <div id="loading-overlay" style="display: flex; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.95); z-index: 2000;" class="backdrop-blur-md flex flex-col items-center justify-center text-center px-4 transition-opacity duration-300">
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[2000] flex flex-col items-center justify-center text-center px-4 transition-opacity duration-300">
         <div class="text-6xl animate-bounce mb-4">📍</div>
         <h2 class="text-3xl font-black text-white mb-2">טוען נתונים...</h2>
         <p class="text-slate-300 font-medium text-sm">מכין את מפת היישובים של ישראל</p>
