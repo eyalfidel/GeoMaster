@@ -6,21 +6,29 @@
     <title>משחק היישובים של ישראל | V3.3</title>
     <meta name="description" content="שחקו במשחק הדירוגים הגאוגרפי של ישראל. שני מצבי משחק, מפות וסיכומים!">
     
-    <!-- CSS בסיסי ביותר: חוסם לחלוטין הבהובים של אלמנטים מוסתרים, בלי שום מסך טעינה -->
+    <!-- CSS בסיסי: מחביא את האתר עד שכל העיצוב נטען לחלוטין, ומונע FOUC -->
     <style>
-        body { margin: 0; padding: 0; background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
-        .hidden { display: none !important; } /* שורת הקסם שמחליפה את כל מסכי הטעינה */
+        body { 
+            opacity: 0; /* שקוף לחלוטין בהתחלה */
+            transition: opacity 0.3s ease-in; 
+            font-family: 'Heebo', sans-serif; 
+            background-color: #f8fafc; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent; 
+            overflow-x: hidden; 
+        }
+        body.ready { opacity: 1; } /* המחלקה שתתווסף כשהכל מוכן */
         
-        button { touch-action: manipulation; cursor: pointer; }
+        .hidden { display: none !important; }
         .scale-tap:active { transform: scale(0.96); }
         .selected-bank-item { outline: 3px solid #0891b2; background-color: #e0f2fe; transform: scale(1.05); }
         .slot-filled { background-color: #f0fdf4; border-color: #86efac; }
         .leaflet-control-attribution { font-size: 8px !important; }
         .leaflet-control-zoom { border: none !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; }
+        button { touch-action: manipulation; }
     </style>
 
     <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png" type="image/png">
-    <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -32,213 +40,180 @@
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Heebo', 'sans-serif'] },
                     colors: { primary: '#0891b2', accent: '#f59e0b', success: '#22c55e', warning: '#eab308', danger: '#ef4444' }
                 }
             }
         }
     </script>
 </head>
-<body>
+<body class="min-h-screen flex flex-col items-center p-4">
 
-    <div id="game-app" class="min-h-screen flex flex-col items-center p-4 w-full max-w-md mx-auto relative">
-
-        <header class="w-full space-y-3 mb-3 pt-2">
-            <div class="flex justify-between items-end px-1">
-                <div>
-                    <h1 class="text-3xl font-black text-slate-900 leading-none">משחק היישובים</h1>
-                    <p class="text-primary font-bold text-sm">מאת איל פידל</p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="openTutorial()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-primary transition-colors shadow-sm flex items-center justify-center text-lg leading-none active:scale-95" aria-label="איך משחקים?">❓</button>
-                    <div class="text-left mr-1">
-                        <span class="text-slate-400 text-[10px] uppercase font-bold block">שיא אישי🏆</span>
-                        <span id="best-score-display" class="text-xl font-black text-slate-800">--</span>
-                    </div>
-                </div>
+    <!-- האתר המקורי שלך - בלי מסכי טעינה חוסמים -->
+    <header class="w-full max-w-md space-y-3 mb-3 pt-2">
+        <div class="flex justify-between items-end px-1">
+            <div>
+                <h1 class="text-3xl font-black text-slate-900 leading-none">משחק היישובים</h1>
+                <p class="text-primary font-bold text-sm">מאת איל פידל</p>
             </div>
-
-            <div class="flex gap-2 w-full pt-1">
-                <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
-                    <button id="inline-diff-easy" onclick="setDiff('easy')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🟢 קל</button>
-                    <button id="inline-diff-hard" onclick="setDiff('hard')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🔴 קשה</button>
+            <div class="flex items-center gap-2">
+                <button onclick="openTutorial()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-primary transition-colors shadow-sm flex items-center justify-center text-lg leading-none active:scale-95" aria-label="איך משחקים?">❓</button>
+                <div class="text-left mr-1">
+                    <span class="text-slate-400 text-[10px] uppercase font-bold block">שיא אישי🏆</span>
+                    <span id="best-score-display" class="text-xl font-black text-slate-800">--</span>
                 </div>
-                <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
-                    <button id="inline-mode-draw" onclick="setMode('draw')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🎲 הגרלה</button>
-                    <button id="inline-mode-place" onclick="setMode('place')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🧩 הצבה</button>
-                </div>
-            </div>
-        </header>
-
-        <!-- מסך הגרלה -->
-        <div id="draw-screen" class="w-full hidden flex-col items-center flex-grow">
-            <div class="w-full flex justify-between items-center mb-2 px-1">
-                <h1 class="text-xl font-black text-slate-800">מצב הגרלה</h1>
-                <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200 transition-colors">ערבב מחדש 🔄</button>
-            </div>
-            <div class="bg-white rounded-3xl shadow-sm p-3 mb-4 grid grid-cols-2 gap-4 border border-slate-100 w-full">
-                <div class="text-center">
-                    <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">סיבוב</span>
-                    <span id="round-display" class="text-xl font-black text-slate-800">1 / 8</span>
-                </div>
-                <div class="text-center border-r border-slate-100">
-                    <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">ניקוד</span>
-                    <span id="draw-score" class="text-xl font-black text-primary">0</span>
-                </div>
-            </div>
-
-            <div class="flex justify-center gap-2 py-1 mb-2 w-full" id="draw-dots"></div>
-
-            <div id="draw-settlement-container" class="w-full py-4 bg-white rounded-3xl shadow-sm border border-slate-100 text-center flex flex-col items-center relative min-h-[140px] mb-2">
-                <span class="text-slate-400 font-bold text-[10px] bg-slate-50 px-3 py-1 rounded-full uppercase tracking-widest">היישוב הנוכחי</span>
-                <h1 id="draw-settlement-name" class="text-5xl font-black text-slate-900 mt-3 tracking-tight">...</h1>
-            </div>
-
-            <div id="draw-prev-panel" class="w-full mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 hidden flex-col items-center gap-2 transition-all">
-                <div id="draw-prev-feedback" class="text-xs text-slate-700 text-center font-medium leading-tight"></div>
-                <button id="draw-map-btn" class="text-[11px] font-bold border border-slate-300 text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm" onclick="toggleDrawMap()">מפה 🗺️</button>
-                <div id="draw-map-wrapper" class="w-full rounded-xl overflow-hidden transition-all duration-300 h-0 opacity-0 pointer-events-none relative">
-                    <div id="draw-map" class="w-full h-full bg-slate-200 z-10"></div>
-                </div>
-            </div>
-
-            <div id="draw-categories" class="grid grid-cols-2 gap-3 w-full"></div>
-            
-            <div id="draw-end-controls" class="w-full gap-3 mt-6 mb-4 hidden">
-                <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
-                <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
             </div>
         </div>
 
-        <!-- מסך הצבה -->
-        <div id="place-screen" class="w-full hidden flex-col items-center flex-grow">
-            <div class="w-full flex justify-between items-center mb-3 pt-1">
-                <h1 class="text-xl font-black text-slate-800">מצב הצבה</h1>
-                <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200">ערבב מחדש 🔄</button>
+        <div class="flex gap-2 w-full pt-1">
+            <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
+                <button id="inline-diff-easy" onclick="setDiff('easy')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🟢 קל</button>
+                <button id="inline-diff-hard" onclick="setDiff('hard')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🔴 קשה</button>
             </div>
-
-            <div id="place-bank-container" class="w-full bg-white p-3 rounded-2xl shadow-sm border border-slate-100 mb-4 hidden block">
-                <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest block text-center mb-2">בנק היישובים (לחץ לבחירה)</span>
-                <div id="place-bank" class="flex flex-wrap justify-center gap-2"></div>
+            <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
+                <button id="inline-mode-draw" onclick="setMode('draw')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🎲 הגרלה</button>
+                <button id="inline-mode-place" onclick="setMode('place')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🧩 הצבה</button>
             </div>
+        </div>
+    </header>
 
-            <div id="place-categories" class="grid grid-cols-2 gap-3 w-full mb-6"></div>
-
-            <button id="place-submit-btn" onclick="submitPlacement()" class="w-full bg-primary text-white text-xl font-black py-4 rounded-2xl shadow-xl hover:bg-cyan-700 scale-tap hidden">
-                בדוק תוצאות! 🎯
-            </button>
-
-            <div id="place-end-controls" class="w-full gap-3 mt-2 mb-4 hidden">
-                <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
-                <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
+    <div id="draw-screen" class="w-full max-w-md flex-col items-center flex-grow hidden">
+        <div class="w-full flex justify-between items-center mb-2 px-1">
+            <h1 class="text-xl font-black text-slate-800">מצב הגרלה</h1>
+            <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200 transition-colors">ערבב מחדש 🔄</button>
+        </div>
+        <div class="bg-white rounded-3xl shadow-sm p-3 mb-4 grid grid-cols-2 gap-4 border border-slate-100 w-full">
+            <div class="text-center">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">סיבוב</span>
+                <span id="round-display" class="text-xl font-black text-slate-800">1 / 8</span>
+            </div>
+            <div class="text-center border-r border-slate-100">
+                <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">ניקוד</span>
+                <span id="draw-score" class="text-xl font-black text-primary">0</span>
             </div>
         </div>
 
+        <div class="flex justify-center gap-2 py-1 mb-2 w-full" id="draw-dots"></div>
+
+        <div id="draw-settlement-container" class="w-full py-4 bg-white rounded-3xl shadow-sm border border-slate-100 text-center flex flex-col items-center relative min-h-[140px] mb-2">
+            <span class="text-slate-400 font-bold text-[10px] bg-slate-50 px-3 py-1 rounded-full uppercase tracking-widest">היישוב הנוכחי</span>
+            <h1 id="draw-settlement-name" class="text-5xl font-black text-slate-900 mt-3 tracking-tight">טוען...</h1>
+        </div>
+
+        <div id="draw-prev-panel" class="w-full max-w-sm mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 flex flex-col items-center gap-2 hidden transition-all">
+            <div id="draw-prev-feedback" class="text-xs text-slate-700 text-center font-medium leading-tight"></div>
+            <button id="draw-map-btn" class="text-[11px] font-bold border border-slate-300 text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm" onclick="toggleDrawMap()">מפה 🗺️</button>
+            <div id="draw-map-wrapper" class="w-full rounded-xl overflow-hidden transition-all duration-300 h-0 opacity-0 pointer-events-none relative">
+                <div id="draw-map" class="w-full h-full bg-slate-200 z-10"></div>
+            </div>
+        </div>
+
+        <div id="draw-categories" class="grid grid-cols-2 gap-3 w-full"></div>
+        
+        <div id="draw-end-controls" class="w-full flex gap-3 mt-6 mb-4 hidden">
+            <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
+            <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
+        </div>
     </div>
 
-    <!-- Modals -->
-    <div id="modals-container">
-        <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-4 z-[1000]">
-            <div class="bg-white rounded-[32px] w-full max-w-sm mx-auto p-6 relative shadow-2xl">
-                <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors">X</button>
-                
-                <div class="text-center mb-6 mt-2">
-                    <span class="text-4xl block mb-2">📍</span>
-                    <h2 class="text-2xl font-black text-slate-900">איך משחקים?</h2>
-                </div>
-                
-                <div class="text-slate-600 text-sm space-y-4 font-medium leading-relaxed h-80 overflow-y-auto pr-1">
-                    <p>המשחק מורכב מ-<b>8 סיבובים</b>. המטרה היא לשבץ כל יישוב בקטגוריה בה הוא יקבל את <b>הדירוג הטוב ביותר</b> (מקום 1). <span class="text-primary font-bold">כל קטגוריה ניתנת לשימוש פעם אחת בלבד.</span></p>
-                    
-                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
-                        <p><b>🕹️ מצבי המשחק:</b></p>
-                        <ul class="list-disc list-inside space-y-1 text-slate-500">
-                            <li><b class="text-slate-700">מצב קל / קשה:</b> בקל יוגרלו רק 250 היישובים המוכרים והגדולים. בקשה תוגרל כל המדינה.</li>
-                            <li><b class="text-slate-700">הגרלה (1-1):</b> כל סיבוב מוגרל יישוב אחד שצריך לשבץ מיד.</li>
-                            <li><b class="text-slate-700">הצבה (8):</b> כל 8 היישובים מוגרלים מראש, ועליכם לחלק אותם אסטרטגית לקטגוריות השונות (כמו פאזל).</li>
-                        </ul>
-                    </div>
-
-                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
-                        <p><b>📏 חוקי מדידה:</b></p>
-                        <ul class="list-disc list-inside space-y-1 text-slate-500">
-                            <li><b>הכי רחוק מהמרכז:</b> נמדד אווירית מתחנת <span class="text-slate-800 font-bold">רכבת השלום</span>.</li>
-                            <li><b>הכי רחוק מהים:</b> מרחק אל הים התיכון בלבד.</li>
-                            <li><b>הכי גבוה:</b> לפי גובה <span class="text-slate-800 font-bold">ממוצע</span> (למ"ס).</li>
-                            <li><b>שם ארוך:</b> ספירת אותיות בלבד, <span class="text-slate-800 font-bold">ללא רווחים ומקפים</span>.</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <button onclick="closeTutorial()" class="w-full mt-6 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-cyan-700 active:scale-95 transition-all text-lg">
-                    הבנתי, בואו נשחק!
-                </button>
-            </div>
+    <div id="place-screen" class="w-full max-w-md flex-col items-center flex-grow hidden">
+        <div class="w-full flex justify-between items-center mb-3 pt-1">
+            <h1 class="text-xl font-black text-slate-800">מצב הצבה</h1>
+            <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200">ערבב מחדש 🔄</button>
         </div>
 
-        <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center p-4 z-[999] overflow-y-auto">
-            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center shadow-2xl flex-shrink-0 min-h-[85vh] flex flex-col relative my-auto">
-                <button onclick="closeEndGameModal()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-50" title="סגור חלון וצפה בלוח">X</button>
-                
-                <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic z-50">שיא חדש!</div>
-                
-                <div id="perfect-match-ribbon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap z-50">
-                    🏆 שידוך מושלם!
-                </div>
-                
-                <div class="flex-grow flex flex-col space-y-4 pt-2">
-                    <h2 class="text-3xl font-black text-slate-900 leading-tight">כל הכבוד!</h2>
-                    
-                    <div class="py-3 bg-slate-50 rounded-3xl border border-slate-100 shrink-0">
-                        <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span>
-                        <div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div>
-                    </div>
-
-                    <div class="w-full flex-grow min-h-[160px] bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative shrink-0">
-                        <div id="end-map" class="w-full h-full"></div>
-                    </div>
-
-                    <div id="round-history" class="text-right text-[11px] bg-slate-50 p-3 rounded-2xl space-y-2 overflow-y-auto max-h-[25vh] border border-slate-100 shadow-inner shrink-0"></div>
-                </div>
-
-                <div class="space-y-3 pt-4 mt-auto shrink-0 border-t border-slate-100">
-                    <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
-                    <button onclick="showOptimalGame()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 scale-tap">
-                        המשחק האופטימלי 💡
-                    </button>
-                    <button onclick="closeEndGameModal(); initGame();" class="w-full text-slate-500 font-bold py-2 text-sm">משחק חדש</button>
-                </div>
-            </div>
+        <div id="place-bank-container" class="w-full bg-white p-3 rounded-2xl shadow-sm border border-slate-100 mb-4">
+            <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest block text-center mb-2">בנק היישובים (לחץ לבחירה)</span>
+            <div id="place-bank" class="flex flex-wrap justify-center gap-2"></div>
         </div>
 
-        <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center p-4 z-[1000] overflow-y-auto">
-            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center space-y-5 relative shadow-2xl my-auto flex-shrink-0 min-h-[70vh] flex flex-col">
-                <button onclick="hideEl('optimal-modal')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
-                
-                <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
-                <p class="text-xs text-slate-500 font-medium px-2">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
-                
-                <div class="py-3 bg-success/10 rounded-3xl border border-success/20 shrink-0">
-                    <span class="text-success text-[10px] font-bold uppercase tracking-widest">ציון אופטימלי אפשרי</span>
-                    <div id="optimal-score" class="text-5xl font-black text-success tracking-tighter">0</div>
-                </div>
+        <div id="place-categories" class="grid grid-cols-2 gap-3 w-full mb-6"></div>
 
-                <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto flex-grow border border-slate-100 shadow-inner"></div>
+        <button id="place-submit-btn" onclick="submitPlacement()" class="w-full bg-primary text-white text-xl font-black py-4 rounded-2xl shadow-xl hover:bg-cyan-700 scale-tap hidden">
+            בדוק תוצאות! 🎯
+        </button>
 
-                <div class="pt-4 mt-auto shrink-0 border-t border-slate-100">
-                    <button onclick="shareOptimalResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">
-                        שתף השוואה 📊
-                    </button>
+        <div id="place-end-controls" class="w-full flex gap-3 mt-2 mb-4 hidden">
+            <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
+            <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
+        </div>
+    </div>
+
+    <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-[1000] hidden">
+        <div class="bg-white rounded-[32px] w-full max-w-sm p-6 relative shadow-2xl">
+            <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors">X</button>
+            <div class="text-center mb-6 mt-2">
+                <span class="text-4xl block mb-2">📍</span>
+                <h2 class="text-2xl font-black text-slate-900">איך משחקים?</h2>
+            </div>
+            <div class="text-slate-600 text-sm space-y-4 font-medium leading-relaxed h-80 overflow-y-auto pr-1">
+                <p>המשחק מורכב מ-<b>8 סיבובים</b>. המטרה היא לשבץ כל יישוב בקטגוריה בה הוא יקבל את <b>הדירוג הטוב ביותר</b> (מקום 1). <span class="text-primary font-bold">כל קטגוריה ניתנת לשימוש פעם אחת בלבד.</span></p>
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
+                    <p><b>🕹️ מצבי המשחק:</b></p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-500">
+                        <li><b class="text-slate-700">מצב קל / קשה:</b> בקל יוגרלו רק 250 היישובים המוכרים והגדולים. בקשה תוגרל כל המדינה.</li>
+                        <li><b class="text-slate-700">הגרלה (1-1):</b> כל סיבוב מוגרל יישוב אחד שצריך לשבץ מיד.</li>
+                        <li><b class="text-slate-700">הצבה (8):</b> כל 8 היישובים מוגרלים מראש, ועליכם לחלק אותם אסטרטגית לקטגוריות השונות (כמו פאזל).</li>
+                    </ul>
                 </div>
+                <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
+                    <p><b>📏 חוקי מדידה:</b></p>
+                    <ul class="list-disc list-inside space-y-1 text-slate-500">
+                        <li><b>הכי רחוק מהמרכז:</b> נמדד אווירית מתחנת <span class="text-slate-800 font-bold">רכבת השלום</span>.</li>
+                        <li><b>הכי רחוק מהים:</b> מרחק אל הים התיכון בלבד.</li>
+                        <li><b>הכי גבוה:</b> לפי גובה <span class="text-slate-800 font-bold">ממוצע</span> (למ"ס).</li>
+                        <li><b>שם ארוך:</b> ספירת אותיות בלבד, <span class="text-slate-800 font-bold">ללא רווחים ומקפים</span>.</li>
+                    </ul>
+                </div>
+            </div>
+            <button onclick="closeTutorial()" class="w-full mt-6 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-cyan-700 active:scale-95 transition-all text-lg">הבנתי, בואו נשחק!</button>
+        </div>
+    </div>
+
+    <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 z-[999] hidden overflow-y-auto">
+        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center shadow-2xl flex-shrink-0 min-h-[85vh] flex flex-col relative my-auto">
+            <button onclick="document.getElementById('modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-50">X</button>
+            <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic z-50">שיא חדש!</div>
+            <div id="perfect-match-ribbon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap z-50">🏆 שידוך מושלם!</div>
+            <div class="flex-grow flex flex-col space-y-4 pt-2">
+                <h2 class="text-3xl font-black text-slate-900 leading-tight">כל הכבוד!</h2>
+                <div class="py-3 bg-slate-50 rounded-3xl border border-slate-100 shrink-0">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span>
+                    <div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div>
+                </div>
+                <div class="w-full flex-grow min-h-[160px] bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative shrink-0">
+                    <div id="end-map" class="w-full h-full"></div>
+                </div>
+                <div id="round-history" class="text-right text-[11px] bg-slate-50 p-3 rounded-2xl space-y-2 overflow-y-auto max-h-[25vh] border border-slate-100 shadow-inner shrink-0"></div>
+            </div>
+            <div class="space-y-3 pt-4 mt-auto shrink-0 border-t border-slate-100">
+                <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
+                <button onclick="showOptimalGame()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 scale-tap">המשחק האופטימלי 💡</button>
+                <button onclick="initGame()" class="w-full text-slate-500 font-bold py-2 text-sm">משחק חדש</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 z-[1000] hidden overflow-y-auto">
+        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl my-auto flex-shrink-0 min-h-[70vh] flex flex-col">
+            <button onclick="document.getElementById('optimal-modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
+            <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
+            <p class="text-xs text-slate-500 font-medium px-2">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
+            <div class="py-3 bg-success/10 rounded-3xl border border-success/20 shrink-0">
+                <span class="text-success text-[10px] font-bold uppercase tracking-widest">ציון אופטימלי אפשרי</span>
+                <div id="optimal-score" class="text-5xl font-black text-success tracking-tighter">0</div>
+            </div>
+            <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto flex-grow border border-slate-100 shadow-inner"></div>
+            <div class="pt-4 mt-auto shrink-0 border-t border-slate-100">
+                <button onclick="shareOptimalResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף השוואה 📊</button>
             </div>
         </div>
     </div>
     
     <script>
         /* =====================================================================
-           נתוני המשחק - הדבק את התוכן של ה-JSON כאן!
+           נתונים - הכל נכנס ישירות לכאן! אין יותר fetch ואין בעיות רשת
            ===================================================================== */
-        // הדבק את תוכן הקובץ easy.json במקום הסוגריים המרובעים:
+        // הדבק את מערך הנתונים מתוך easy.json בין הסוגריים המרובעים
         let easyData = [
   {
     "שם יישוב": "זמר",
@@ -6491,8 +6466,8 @@
     "ממוצע דירוגים": 64.75
   }
 ]; 
-        
-        // הדבק את תוכן הקובץ hard.json במקום הסוגריים המרובעים:
+
+        // הדבק את מערך הנתונים מתוך hard.json בין הסוגריים המרובעים
         let hardData = [
   {
     "שם יישוב": "ירושלים",
@@ -35801,18 +35776,6 @@
 ];
 
         /* =====================================================================
-           פונקציות הליבה להסתרת תצוגה
-           ===================================================================== */
-        function showEl(id) {
-            const el = document.getElementById(id);
-            if(el) { el.classList.remove('hidden'); }
-        }
-        function hideEl(id) {
-            const el = document.getElementById(id);
-            if(el) { el.classList.add('hidden'); }
-        }
-
-        /* =====================================================================
            הגדרות בסיס 
            ===================================================================== */
         const MAX_PENALTY = 600;
@@ -35859,17 +35822,15 @@
         let drawMap = null;
         let drawMarker = null;
         let isDrawMapOpen = false;
-
         let placeAssignments = {}; 
         let selectedPlaceItem = null;
 
         /* =====================================================================
-           הפעלת המשחק בצורה ישירה וחלקה
+           אתחול טהור - מופעל אוטומטית כשהדפדפן מסיים לטעון את הכל
            ===================================================================== */
-        window.addEventListener("DOMContentLoaded", () => {
-            if(easyData.length < 8 || hardData.length < 8) {
-                console.warn("שים לב: נתוני ה-JSON עדיין לא הודבקו לתוך הקוד.");
-            }
+        window.addEventListener('load', () => {
+            // חושף את האתר באנימציה חלקה אחרי ש-Tailwind כבר עשה את הקסם שלו
+            document.body.classList.add('ready');
             
             checkTutorial();
             updateInlineButtonsUI();
@@ -35879,14 +35840,13 @@
         function checkTutorial() {
             if (!localStorage.getItem('israelGameTutorialSeenV3')) { openTutorial(); }
         }
-        function openTutorial() { showEl('tutorial-modal'); }
+        function openTutorial() { document.getElementById('tutorial-modal').classList.remove('hidden'); }
         function closeTutorial() { 
-            hideEl('tutorial-modal');
+            document.getElementById('tutorial-modal').classList.add('hidden');
             localStorage.setItem('israelGameTutorialSeenV3', 'true'); 
         }
 
-        function openEndGameModal() { showEl('modal'); }
-        function closeEndGameModal() { hideEl('modal'); }
+        function openEndGameModal() { document.getElementById('modal').classList.remove('hidden'); }
 
         /* =====================================================================
            שליטה מהירה במצבים (Inline)
@@ -35950,12 +35910,17 @@
            אתחול משחק
            ===================================================================== */
         function initGame() {
-            closeEndGameModal();
-            hideEl('draw-screen');
-            hideEl('place-screen');
-            hideEl('draw-end-controls');
-            hideEl('place-end-controls');
-            showEl('draw-settlement-container');
+            if (easyData.length === 0 && hardData.length === 0) {
+                alert("הנתונים חסרים. אנא ודא שהדבקת את ה-JSON לקוד.");
+                return;
+            }
+
+            document.getElementById('modal').classList.add('hidden');
+            document.getElementById('draw-screen').classList.add('hidden');
+            document.getElementById('place-screen').classList.add('hidden');
+            document.getElementById('draw-end-controls').classList.add('hidden');
+            document.getElementById('place-end-controls').classList.add('hidden');
+            document.getElementById('draw-settlement-container').classList.remove('hidden');
             
             totalScore = 0;
             gameHistory = [];
@@ -35970,19 +35935,26 @@
 
             currentDataset = diff === 'easy' ? easyData : hardData;
             
-            if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length < 8) return;
+            if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length < 8) {
+                if (hardData && Array.isArray(hardData) && hardData.length >= 8) { currentDataset = hardData; diff = 'hard'; updateInlineButtonsUI(); }
+                else if (easyData && Array.isArray(easyData) && easyData.length >= 8) { currentDataset = easyData; diff = 'easy'; updateInlineButtonsUI(); }
+                else { alert("שגיאה: הנתונים חסרים (נדרשים לפחות 8 יישובים)."); return; }
+                loadBestScore();
+            }
 
             let pool = [...currentDataset];
             pool.sort(() => 0.5 - Math.random());
             sessionSettlements = pool.slice(0, 8);
 
             if (mode === 'draw') {
-                showEl('draw-screen');
+                document.getElementById('draw-screen').classList.remove('hidden');
+                document.getElementById('draw-screen').classList.add('flex');
                 document.getElementById('draw-score').innerText = '0';
                 initDrawMode();
             } else {
-                showEl('place-screen');
-                showEl('place-bank-container');
+                document.getElementById('place-screen').classList.remove('hidden');
+                document.getElementById('place-screen').classList.add('flex');
+                document.getElementById('place-bank-container').classList.remove('hidden');
                 initPlaceMode();
             }
         }
@@ -36008,21 +35980,22 @@
         }
 
         function nextDrawRound() {
+            const prevPanel = document.getElementById('draw-prev-panel');
             if (drawMapSettlement) {
-                showEl('draw-prev-panel');
+                prevPanel.classList.remove('hidden');
                 const mapBtn = document.getElementById('draw-map-btn');
                 if (drawMapSettlement['lat'] || drawMapSettlement['קו רוחב']) {
-                    showEl('draw-map-btn');
+                    mapBtn.classList.remove('hidden');
                     mapBtn.innerHTML = `איפה זה <b>${drawMapSettlement["שם יישוב"]}</b>? 🗺️`;
-                } else hideEl('draw-map-btn');
+                } else mapBtn.classList.add('hidden');
                 if(isDrawMapOpen) toggleDrawMap();
             } else {
-                hideEl('draw-prev-panel');
+                prevPanel.classList.add('hidden');
             }
 
             if (currentDrawIndex >= 8) { 
-                hideEl('draw-settlement-container');
-                showEl('draw-end-controls');
+                document.getElementById('draw-settlement-container').classList.add('hidden');
+                document.getElementById('draw-end-controls').classList.remove('hidden');
                 showEndGame(); 
                 return; 
             }
@@ -36125,7 +36098,7 @@
         function initPlaceMode() {
             renderPlaceBank();
             renderPlaceCategories();
-            hideEl('place-submit-btn');
+            document.getElementById('place-submit-btn').classList.add('hidden');
         }
 
         function renderPlaceBank() {
@@ -36144,9 +36117,9 @@
             });
             if (Object.keys(placeAssignments).length === 8) {
                 bank.innerHTML = `<span class="text-success font-bold text-sm">כל היישובים שובצו! ✔️</span>`;
-                showEl('place-submit-btn');
+                document.getElementById('place-submit-btn').classList.remove('hidden');
             } else {
-                hideEl('place-submit-btn');
+                document.getElementById('place-submit-btn').classList.add('hidden');
             }
         }
 
@@ -36228,9 +36201,9 @@
                 }
             });
 
-            hideEl('place-submit-btn');
-            hideEl('place-bank-container');
-            showEl('place-end-controls');
+            document.getElementById('place-submit-btn').classList.add('hidden');
+            document.getElementById('place-bank-container').classList.add('hidden');
+            document.getElementById('place-end-controls').classList.remove('hidden');
 
             showEndGame();
         }
@@ -36250,17 +36223,17 @@
                 bestScore = totalScore;
                 localStorage.setItem(getBestScoreKey(), totalScore);
                 document.getElementById('best-score-display').innerText = totalScore.toLocaleString();
-                showEl('new-record-badge');
+                recordBadge.classList.remove('hidden');
             } else {
-                hideEl('new-record-badge');
+                recordBadge.classList.add('hidden');
             }
 
             calculateOptimalGameData();
             const ribbon = document.getElementById('perfect-match-ribbon');
             if (totalScore === globalOptimalScore) {
-                showEl('perfect-match-ribbon');
+                ribbon.classList.remove('hidden');
             } else {
-                hideEl('perfect-match-ribbon');
+                ribbon.classList.add('hidden');
             }
 
             document.getElementById('round-history').innerHTML = gameHistory.map((h, index) => `
@@ -36410,7 +36383,7 @@
         function showOptimalGame() {
             document.getElementById('optimal-score').innerText = globalOptimalScore.toLocaleString();
             document.getElementById('optimal-history').innerHTML = globalOptimalHtml;
-            showEl('optimal-modal');
+            document.getElementById('optimal-modal').classList.remove('hidden');
         }
 
         /* =====================================================================
