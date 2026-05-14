@@ -293,7 +293,7 @@
         window.onload = () => {
             checkTutorial();
             updateInlineButtonsUI();
-            loadData(); // טעינת נתונים במקום אתחול ישיר
+            loadData();
         };
 
         /* =====================================================================
@@ -301,7 +301,6 @@
            ===================================================================== */
         async function loadData() {
             try {
-                // משתמשים ב-Promise.all כדי למשוך את שניהם במקביל מאותה תיקייה
                 const [easyRes, hardRes] = await Promise.all([
                     fetch('easy.json'),
                     fetch('hard.json')
@@ -314,24 +313,26 @@
                 easyData = await easyRes.json();
                 hardData = await hardRes.json();
 
-                // הסרת מסך הטעינה החוסם
                 const overlay = document.getElementById('loading-overlay');
-                overlay.style.opacity = '0';
-                setTimeout(() => { overlay.classList.add('hidden'); }, 300);
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => { overlay.classList.add('hidden'); }, 300);
+                }
 
-                // מתחילים את המשחק רק אחרי שהנתונים זמינים
                 initGame();
             } catch (error) {
                 console.error("שגיאה בטעינת הנתונים:", error);
                 const overlay = document.getElementById('loading-overlay');
-                overlay.innerHTML = `
-                    <div class="text-6xl mb-4">⚠️</div>
-                    <h2 class="text-2xl font-black text-white mb-2">שגיאה בטעינת הנתונים</h2>
-                    <p class="text-slate-300 font-medium text-sm text-center px-4">
-                        לא ניתן לטעון את קבצי ה-JSON.<br>
-                        אנא ודא ש- easy.json ו- hard.json נמצאים בשרת.
-                    </p>
-                `;
+                if (overlay) {
+                    overlay.innerHTML = `
+                        <div class="text-6xl mb-4">⚠️</div>
+                        <h2 class="text-2xl font-black text-white mb-2">שגיאה בטעינת הנתונים</h2>
+                        <p class="text-slate-300 font-medium text-sm text-center px-4">
+                            לא ניתן לטעון את קבצי ה-JSON.<br>
+                            אנא ודא ש- easy.json ו- hard.json נמצאים בשרת בתיקייה הנכונה.
+                        </p>
+                    `;
+                }
             }
         }
 
@@ -344,7 +345,6 @@
             localStorage.setItem('israelGameTutorialSeenV3', 'true'); 
         }
 
-        // הפונקציה שהייתה חסרה ופותחת את חלון הסיכום
         function openEndGameModal() {
             document.getElementById('modal').classList.remove('hidden');
         }
@@ -411,7 +411,6 @@
            אתחול משחק
            ===================================================================== */
         function initGame() {
-            // אם הנתונים עוד לא נטענו, אין מה לאתחל
             if (easyData.length === 0 && hardData.length === 0) return;
 
             document.getElementById('modal').classList.add('hidden');
