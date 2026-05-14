@@ -6,29 +6,11 @@
     <title>משחק היישובים של ישראל | V3.3</title>
     <meta name="description" content="שחקו במשחק הדירוגים הגאוגרפי של ישראל. שני מצבי משחק, מפות וסיכומים!">
     
-    <!-- CSS טהור ובסיסי - שולט על המסך לפני ששום דבר אחר נטען -->
+    <!-- CSS בסיסי ביותר: חוסם לחלוטין הבהובים של אלמנטים מוסתרים, בלי שום מסך טעינה -->
     <style>
         body { margin: 0; padding: 0; background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .hidden { display: none !important; } /* שורת הקסם שמחליפה את כל מסכי הטעינה */
         
-        /* מסך טעינה הרמטי */
-        #startup-loader {
-            position: fixed; inset: 0; background-color: #0f172a; z-index: 999999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: white; text-align: center; direction: rtl;
-        }
-        
-        .loader-spinner {
-            width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2);
-            border-top-color: #0891b2; border-radius: 50%;
-            animation: spin 1s linear infinite; margin-bottom: 20px;
-        }
-        
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* מסתיר את כל תוכן האתר לחלוטין עד שה-Tailwind נטען - מונע FOUC ב-100% */
-        #app-content { display: none; }
-        
-        /* חוקי עיצוב בסיסיים למשחק */
         button { touch-action: manipulation; cursor: pointer; }
         .scale-tap:active { transform: scale(0.96); }
         .selected-bank-item { outline: 3px solid #0891b2; background-color: #e0f2fe; transform: scale(1.05); }
@@ -59,114 +41,102 @@
 </head>
 <body>
 
-    <!-- מסך הטעינה הראשון שעולה - מוחק את הבעיה מהתמונה -->
-    <div id="startup-loader">
-        <div style="font-size: 64px; margin-bottom: 10px;">📍</div>
-        <div id="spinner-element" class="loader-spinner"></div>
-        <h2 id="loader-title" style="font-size: 24px; font-weight: 900; margin: 0 0 10px 0;">טוען את המשחק...</h2>
-        <p id="loader-subtitle" style="color: #94a3b8; font-size: 14px; margin: 0;">מכין את העיצוב והנתונים</p>
-        <button id="loader-reload-btn" onclick="window.location.reload()" style="display: none; margin-top: 20px; padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer;">שגיאת רשת - רענן עמוד</button>
-    </div>
+    <div id="game-app" class="min-h-screen flex flex-col items-center p-4 w-full max-w-md mx-auto relative">
 
-    <!-- מעטפת המשחק מוסתרת פיזית עד אישור -->
-    <div id="app-content">
-        <div class="min-h-screen flex flex-col items-center p-4 w-full max-w-md mx-auto relative">
-
-            <header class="w-full space-y-3 mb-3 pt-2">
-                <div class="flex justify-between items-end px-1">
-                    <div>
-                        <h1 class="text-3xl font-black text-slate-900 leading-none">משחק היישובים</h1>
-                        <p class="text-primary font-bold text-sm">מאת איל פידל</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="openTutorial()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-primary transition-colors shadow-sm flex items-center justify-center text-lg leading-none active:scale-95" aria-label="איך משחקים?">❓</button>
-                        <div class="text-left mr-1">
-                            <span class="text-slate-400 text-[10px] uppercase font-bold block">שיא אישי🏆</span>
-                            <span id="best-score-display" class="text-xl font-black text-slate-800">--</span>
-                        </div>
-                    </div>
+        <header class="w-full space-y-3 mb-3 pt-2">
+            <div class="flex justify-between items-end px-1">
+                <div>
+                    <h1 class="text-3xl font-black text-slate-900 leading-none">משחק היישובים</h1>
+                    <p class="text-primary font-bold text-sm">מאת איל פידל</p>
                 </div>
-
-                <div class="flex gap-2 w-full pt-1">
-                    <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
-                        <button id="inline-diff-easy" onclick="setDiff('easy')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🟢 קל</button>
-                        <button id="inline-diff-hard" onclick="setDiff('hard')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🔴 קשה</button>
+                <div class="flex items-center gap-2">
+                    <button onclick="openTutorial()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-primary transition-colors shadow-sm flex items-center justify-center text-lg leading-none active:scale-95" aria-label="איך משחקים?">❓</button>
+                    <div class="text-left mr-1">
+                        <span class="text-slate-400 text-[10px] uppercase font-bold block">שיא אישי🏆</span>
+                        <span id="best-score-display" class="text-xl font-black text-slate-800">--</span>
                     </div>
-                    <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
-                        <button id="inline-mode-draw" onclick="setMode('draw')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🎲 הגרלה</button>
-                        <button id="inline-mode-place" onclick="setMode('place')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🧩 הצבה</button>
-                    </div>
-                </div>
-            </header>
-
-            <!-- מסך הגרלה -->
-            <div id="draw-screen" class="w-full hidden flex-col items-center flex-grow">
-                <div class="w-full flex justify-between items-center mb-2 px-1">
-                    <h1 class="text-xl font-black text-slate-800">מצב הגרלה</h1>
-                    <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200 transition-colors">ערבב מחדש 🔄</button>
-                </div>
-                <div class="bg-white rounded-3xl shadow-sm p-3 mb-4 grid grid-cols-2 gap-4 border border-slate-100 w-full">
-                    <div class="text-center">
-                        <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">סיבוב</span>
-                        <span id="round-display" class="text-xl font-black text-slate-800">1 / 8</span>
-                    </div>
-                    <div class="text-center border-r border-slate-100">
-                        <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">ניקוד</span>
-                        <span id="draw-score" class="text-xl font-black text-primary">0</span>
-                    </div>
-                </div>
-
-                <div class="flex justify-center gap-2 py-1 mb-2 w-full" id="draw-dots"></div>
-
-                <div id="draw-settlement-container" class="w-full py-4 bg-white rounded-3xl shadow-sm border border-slate-100 text-center flex flex-col items-center relative min-h-[140px] mb-2">
-                    <span class="text-slate-400 font-bold text-[10px] bg-slate-50 px-3 py-1 rounded-full uppercase tracking-widest">היישוב הנוכחי</span>
-                    <h1 id="draw-settlement-name" class="text-5xl font-black text-slate-900 mt-3 tracking-tight">...</h1>
-                </div>
-
-                <div id="draw-prev-panel" class="w-full mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 hidden flex-col items-center gap-2 transition-all">
-                    <div id="draw-prev-feedback" class="text-xs text-slate-700 text-center font-medium leading-tight"></div>
-                    <button id="draw-map-btn" class="text-[11px] font-bold border border-slate-300 text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm" onclick="toggleDrawMap()">מפה 🗺️</button>
-                    <div id="draw-map-wrapper" class="w-full rounded-xl overflow-hidden transition-all duration-300 h-0 opacity-0 pointer-events-none relative">
-                        <div id="draw-map" class="w-full h-full bg-slate-200 z-10"></div>
-                    </div>
-                </div>
-
-                <div id="draw-categories" class="grid grid-cols-2 gap-3 w-full"></div>
-                
-                <div id="draw-end-controls" class="w-full gap-3 mt-6 mb-4 hidden">
-                    <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
-                    <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
                 </div>
             </div>
 
-            <!-- מסך הצבה -->
-            <div id="place-screen" class="w-full hidden flex-col items-center flex-grow">
-                <div class="w-full flex justify-between items-center mb-3 pt-1">
-                    <h1 class="text-xl font-black text-slate-800">מצב הצבה</h1>
-                    <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200">ערבב מחדש 🔄</button>
+            <div class="flex gap-2 w-full pt-1">
+                <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
+                    <button id="inline-diff-easy" onclick="setDiff('easy')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🟢 קל</button>
+                    <button id="inline-diff-hard" onclick="setDiff('hard')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🔴 קשה</button>
                 </div>
-
-                <div id="place-bank-container" class="w-full bg-white p-3 rounded-2xl shadow-sm border border-slate-100 mb-4 hidden">
-                    <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest block text-center mb-2">בנק היישובים (לחץ לבחירה)</span>
-                    <div id="place-bank" class="flex flex-wrap justify-center gap-2"></div>
+                <div class="flex bg-slate-200/70 p-1 rounded-xl flex-1 h-10 shadow-inner">
+                    <button id="inline-mode-draw" onclick="setMode('draw')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors shadow-sm">🎲 הגרלה</button>
+                    <button id="inline-mode-place" onclick="setMode('place')" class="flex-1 rounded-lg font-bold text-[11px] z-10 transition-colors">🧩 הצבה</button>
                 </div>
+            </div>
+        </header>
 
-                <div id="place-categories" class="grid grid-cols-2 gap-3 w-full mb-6"></div>
-
-                <button id="place-submit-btn" onclick="submitPlacement()" class="w-full bg-primary text-white text-xl font-black py-4 rounded-2xl shadow-xl hover:bg-cyan-700 scale-tap hidden">
-                    בדוק תוצאות! 🎯
-                </button>
-
-                <div id="place-end-controls" class="w-full gap-3 mt-2 mb-4 hidden">
-                    <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
-                    <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
+        <!-- מסך הגרלה -->
+        <div id="draw-screen" class="w-full hidden flex-col items-center flex-grow">
+            <div class="w-full flex justify-between items-center mb-2 px-1">
+                <h1 class="text-xl font-black text-slate-800">מצב הגרלה</h1>
+                <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200 transition-colors">ערבב מחדש 🔄</button>
+            </div>
+            <div class="bg-white rounded-3xl shadow-sm p-3 mb-4 grid grid-cols-2 gap-4 border border-slate-100 w-full">
+                <div class="text-center">
+                    <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">סיבוב</span>
+                    <span id="round-display" class="text-xl font-black text-slate-800">1 / 8</span>
+                </div>
+                <div class="text-center border-r border-slate-100">
+                    <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">ניקוד</span>
+                    <span id="draw-score" class="text-xl font-black text-primary">0</span>
                 </div>
             </div>
 
+            <div class="flex justify-center gap-2 py-1 mb-2 w-full" id="draw-dots"></div>
+
+            <div id="draw-settlement-container" class="w-full py-4 bg-white rounded-3xl shadow-sm border border-slate-100 text-center flex flex-col items-center relative min-h-[140px] mb-2">
+                <span class="text-slate-400 font-bold text-[10px] bg-slate-50 px-3 py-1 rounded-full uppercase tracking-widest">היישוב הנוכחי</span>
+                <h1 id="draw-settlement-name" class="text-5xl font-black text-slate-900 mt-3 tracking-tight">...</h1>
+            </div>
+
+            <div id="draw-prev-panel" class="w-full mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 hidden flex-col items-center gap-2 transition-all">
+                <div id="draw-prev-feedback" class="text-xs text-slate-700 text-center font-medium leading-tight"></div>
+                <button id="draw-map-btn" class="text-[11px] font-bold border border-slate-300 text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm" onclick="toggleDrawMap()">מפה 🗺️</button>
+                <div id="draw-map-wrapper" class="w-full rounded-xl overflow-hidden transition-all duration-300 h-0 opacity-0 pointer-events-none relative">
+                    <div id="draw-map" class="w-full h-full bg-slate-200 z-10"></div>
+                </div>
+            </div>
+
+            <div id="draw-categories" class="grid grid-cols-2 gap-3 w-full"></div>
+            
+            <div id="draw-end-controls" class="w-full gap-3 mt-6 mb-4 hidden">
+                <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
+                <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
+            </div>
         </div>
+
+        <!-- מסך הצבה -->
+        <div id="place-screen" class="w-full hidden flex-col items-center flex-grow">
+            <div class="w-full flex justify-between items-center mb-3 pt-1">
+                <h1 class="text-xl font-black text-slate-800">מצב הצבה</h1>
+                <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200">ערבב מחדש 🔄</button>
+            </div>
+
+            <div id="place-bank-container" class="w-full bg-white p-3 rounded-2xl shadow-sm border border-slate-100 mb-4 hidden block">
+                <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest block text-center mb-2">בנק היישובים (לחץ לבחירה)</span>
+                <div id="place-bank" class="flex flex-wrap justify-center gap-2"></div>
+            </div>
+
+            <div id="place-categories" class="grid grid-cols-2 gap-3 w-full mb-6"></div>
+
+            <button id="place-submit-btn" onclick="submitPlacement()" class="w-full bg-primary text-white text-xl font-black py-4 rounded-2xl shadow-xl hover:bg-cyan-700 scale-tap hidden">
+                בדוק תוצאות! 🎯
+            </button>
+
+            <div id="place-end-controls" class="w-full gap-3 mt-2 mb-4 hidden">
+                <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
+                <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Modals (עטופים ב-div נפרד למניעת התנגשויות) -->
+    <!-- Modals -->
     <div id="modals-container">
         <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-4 z-[1000]">
             <div class="bg-white rounded-[32px] w-full max-w-sm mx-auto p-6 relative shadow-2xl">
@@ -243,7 +213,7 @@
 
         <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center p-4 z-[1000] overflow-y-auto">
             <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center space-y-5 relative shadow-2xl my-auto flex-shrink-0 min-h-[70vh] flex flex-col">
-                <button onclick="hideEl('optimal-modal', 'flex')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
+                <button onclick="hideEl('optimal-modal')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
                 
                 <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
                 <p class="text-xs text-slate-500 font-medium px-2">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
@@ -268,7 +238,7 @@
         /* =====================================================================
            נתוני המשחק - הדבק את התוכן של ה-JSON כאן!
            ===================================================================== */
-        // החלף את ה- [] בתוכן המלא של קובץ easy.json
+        // הדבק את תוכן הקובץ easy.json במקום הסוגריים המרובעים:
         let easyData = [
   {
     "שם יישוב": "זמר",
@@ -6522,7 +6492,7 @@
   }
 ]; 
         
-        // החלף את ה- [] בתוכן המלא של קובץ hard.json
+        // הדבק את תוכן הקובץ hard.json במקום הסוגריים המרובעים:
         let hardData = [
   {
     "שם יישוב": "ירושלים",
@@ -35831,15 +35801,15 @@
 ];
 
         /* =====================================================================
-           פונקציות הליבה - הפעלה נכונה של Tailwind
+           פונקציות הליבה להסתרת תצוגה
            ===================================================================== */
-        function showEl(id, displayType = 'block') {
+        function showEl(id) {
             const el = document.getElementById(id);
-            if(el) { el.classList.remove('hidden'); el.classList.add(displayType === 'block' ? 'block' : 'flex'); }
+            if(el) { el.classList.remove('hidden'); }
         }
-        function hideEl(id, currentDisplay = 'block') {
+        function hideEl(id) {
             const el = document.getElementById(id);
-            if(el) { el.classList.remove(currentDisplay === 'block' ? 'block' : 'flex'); el.classList.add('hidden'); }
+            if(el) { el.classList.add('hidden'); }
         }
 
         /* =====================================================================
@@ -35894,68 +35864,29 @@
         let selectedPlaceItem = null;
 
         /* =====================================================================
-           מערכת טעינה מתמטית - לא מתחילה עד ש-Tailwind עיבד את הדף
+           הפעלת המשחק בצורה ישירה וחלקה
            ===================================================================== */
-        document.addEventListener("DOMContentLoaded", () => {
-            
-            // אלמנט בקרה בלתי נראה כדי לבדוק אם Tailwind סיים לעבוד
-            const twCheck = document.createElement('div');
-            twCheck.className = 'w-8'; // הקלאס הזה אמור להפוך לרוחב 32px אם Tailwind נטען
-            twCheck.style.position = 'absolute';
-            twCheck.style.visibility = 'hidden';
-            document.body.appendChild(twCheck);
-            
-            let attempts = 0;
-            const bootInterval = setInterval(() => {
-                attempts++;
-                
-                // בדיקה אם Tailwind הפעיל את העיצוב על אלמנט הבדיקה
-                if (getComputedStyle(twCheck).width === '32px') {
-                    clearInterval(bootInterval);
-                    twCheck.remove();
-                    launchGameUI();
-                } 
-                // אם עברו 5 שניות וזה עדיין לא נטען
-                else if (attempts === 100) {
-                    document.getElementById('loader-title').innerText = "הרשת קצת איטית...";
-                    document.getElementById('loader-subtitle').innerText = "ממתין לעיצוב האתר";
-                }
-                // אם עברו 10 שניות - רשמית יש שגיאת רשת במובייל
-                else if (attempts === 200) {
-                    clearInterval(bootInterval);
-                    document.getElementById('loader-title').innerText = "שגיאה בטעינת העיצוב";
-                    document.getElementById('loader-subtitle').innerText = "Tailwind CSS לא נטען כראוי";
-                    document.getElementById('spinner-element').style.display = 'none';
-                    document.getElementById('loader-reload-btn').style.display = 'block';
-                }
-            }, 50);
-        });
-
-        function launchGameUI() {
+        window.addEventListener("DOMContentLoaded", () => {
             if(easyData.length < 8 || hardData.length < 8) {
-                alert("אזהרה: נתוני ה-JSON ריקים. אנא הדבק את הקבצים בתוך הקוד איפה שסומן.");
+                console.warn("שים לב: נתוני ה-JSON עדיין לא הודבקו לתוך הקוד.");
             }
-
-            // חשיפת האפליקציה כולה בבת אחת ובצורה מסודרת
-            document.getElementById('startup-loader').style.display = 'none';
-            document.getElementById('app-content').style.display = 'block';
             
             checkTutorial();
             updateInlineButtonsUI();
             initGame();
-        }
+        });
 
         function checkTutorial() {
             if (!localStorage.getItem('israelGameTutorialSeenV3')) { openTutorial(); }
         }
-        function openTutorial() { showEl('tutorial-modal', 'flex'); }
+        function openTutorial() { showEl('tutorial-modal'); }
         function closeTutorial() { 
-            hideEl('tutorial-modal', 'flex');
+            hideEl('tutorial-modal');
             localStorage.setItem('israelGameTutorialSeenV3', 'true'); 
         }
 
-        function openEndGameModal() { showEl('modal', 'flex'); }
-        function closeEndGameModal() { hideEl('modal', 'flex'); }
+        function openEndGameModal() { showEl('modal'); }
+        function closeEndGameModal() { hideEl('modal'); }
 
         /* =====================================================================
            שליטה מהירה במצבים (Inline)
@@ -36019,15 +35950,12 @@
            אתחול משחק
            ===================================================================== */
         function initGame() {
-            if (easyData.length === 0 && hardData.length === 0) return;
-
             closeEndGameModal();
-            hideEl('draw-screen', 'flex');
-            hideEl('place-screen', 'flex');
-            hideEl('draw-end-controls', 'flex');
-            hideEl('place-end-controls', 'flex');
-            
-            showEl('draw-settlement-container', 'flex');
+            hideEl('draw-screen');
+            hideEl('place-screen');
+            hideEl('draw-end-controls');
+            hideEl('place-end-controls');
+            showEl('draw-settlement-container');
             
             totalScore = 0;
             gameHistory = [];
@@ -36049,12 +35977,12 @@
             sessionSettlements = pool.slice(0, 8);
 
             if (mode === 'draw') {
-                showEl('draw-screen', 'flex');
+                showEl('draw-screen');
                 document.getElementById('draw-score').innerText = '0';
                 initDrawMode();
             } else {
-                showEl('place-screen', 'flex');
-                showEl('place-bank-container', 'block');
+                showEl('place-screen');
+                showEl('place-bank-container');
                 initPlaceMode();
             }
         }
@@ -36081,20 +36009,20 @@
 
         function nextDrawRound() {
             if (drawMapSettlement) {
-                showEl('draw-prev-panel', 'flex');
+                showEl('draw-prev-panel');
                 const mapBtn = document.getElementById('draw-map-btn');
                 if (drawMapSettlement['lat'] || drawMapSettlement['קו רוחב']) {
-                    showEl('draw-map-btn', 'block');
+                    showEl('draw-map-btn');
                     mapBtn.innerHTML = `איפה זה <b>${drawMapSettlement["שם יישוב"]}</b>? 🗺️`;
-                } else hideEl('draw-map-btn', 'block');
+                } else hideEl('draw-map-btn');
                 if(isDrawMapOpen) toggleDrawMap();
             } else {
-                hideEl('draw-prev-panel', 'flex');
+                hideEl('draw-prev-panel');
             }
 
             if (currentDrawIndex >= 8) { 
-                hideEl('draw-settlement-container', 'flex');
-                showEl('draw-end-controls', 'flex');
+                hideEl('draw-settlement-container');
+                showEl('draw-end-controls');
                 showEndGame(); 
                 return; 
             }
@@ -36197,7 +36125,7 @@
         function initPlaceMode() {
             renderPlaceBank();
             renderPlaceCategories();
-            hideEl('place-submit-btn', 'block');
+            hideEl('place-submit-btn');
         }
 
         function renderPlaceBank() {
@@ -36216,9 +36144,9 @@
             });
             if (Object.keys(placeAssignments).length === 8) {
                 bank.innerHTML = `<span class="text-success font-bold text-sm">כל היישובים שובצו! ✔️</span>`;
-                showEl('place-submit-btn', 'block');
+                showEl('place-submit-btn');
             } else {
-                hideEl('place-submit-btn', 'block');
+                hideEl('place-submit-btn');
             }
         }
 
@@ -36300,9 +36228,9 @@
                 }
             });
 
-            hideEl('place-submit-btn', 'block');
-            hideEl('place-bank-container', 'block');
-            showEl('place-end-controls', 'flex');
+            hideEl('place-submit-btn');
+            hideEl('place-bank-container');
+            showEl('place-end-controls');
 
             showEndGame();
         }
@@ -36322,17 +36250,17 @@
                 bestScore = totalScore;
                 localStorage.setItem(getBestScoreKey(), totalScore);
                 document.getElementById('best-score-display').innerText = totalScore.toLocaleString();
-                showEl('new-record-badge', 'block');
+                showEl('new-record-badge');
             } else {
-                hideEl('new-record-badge', 'block');
+                hideEl('new-record-badge');
             }
 
             calculateOptimalGameData();
             const ribbon = document.getElementById('perfect-match-ribbon');
             if (totalScore === globalOptimalScore) {
-                showEl('perfect-match-ribbon', 'block');
+                showEl('perfect-match-ribbon');
             } else {
-                hideEl('perfect-match-ribbon', 'block');
+                hideEl('perfect-match-ribbon');
             }
 
             document.getElementById('round-history').innerHTML = gameHistory.map((h, index) => `
@@ -36482,7 +36410,7 @@
         function showOptimalGame() {
             document.getElementById('optimal-score').innerText = globalOptimalScore.toLocaleString();
             document.getElementById('optimal-history').innerHTML = globalOptimalHtml;
-            showEl('optimal-modal', 'flex');
+            showEl('optimal-modal');
         }
 
         /* =====================================================================
