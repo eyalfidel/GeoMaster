@@ -5,13 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
     <title>משחק היישובים של ישראל | V3.3</title>
     <meta name="description" content="שחקו במשחק הדירוגים הגאוגרפי של ישראל. שני מצבי משחק, מפות וסיכומים!">
-    
-    <!-- תיקון קריטי למובייל: הגדרה ראשונית לפני הכל -->
-    <style>
-        .hidden { display: none !important; }
-        #loading-overlay { display: flex !important; position: fixed !important; inset: 0 !important; z-index: 9999 !important; background: #0f172a !important; }
-    </style>
-
     <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png" type="image/png">
     <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png">
     <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png">
@@ -33,6 +26,15 @@
     </script>
 
     <style>
+        /* Anti-FOUC & UI Freeze Protection */
+        .hidden, [cloak] { display: none !important; }
+        
+        /* אופטימיזציה למגע - מונע זום כפול ודיליי במובייל */
+        button { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        
+        /* הגדרת מסך טעינה קשיחה למניעת הבהובים לפני שה-CSS נטען */
+        #loading-overlay { display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9999; background-color: #0f172a; pointer-events: auto; }
+
         body { font-family: 'Heebo', sans-serif; background-color: #f8fafc; user-select: none; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .scale-tap:active { transform: scale(0.96); }
         .selected-bank-item { outline: 3px solid #0891b2; background-color: #e0f2fe; transform: scale(1.05); }
@@ -43,7 +45,8 @@
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
 
-    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[2000] flex flex-col items-center justify-center text-center px-4 transition-opacity duration-300">
+    <!-- מסך טעינה -->
+    <div id="loading-overlay" class="flex flex-col items-center justify-center text-center px-4 transition-opacity duration-300">
         <div class="text-6xl animate-bounce mb-4">📍</div>
         <h2 class="text-3xl font-black text-white mb-2">טוען נתונים...</h2>
         <p class="text-slate-300 font-medium text-sm">מכין את מפת היישובים של ישראל</p>
@@ -76,14 +79,14 @@
         </div>
     </header>
 
-    <div id="draw-screen" class="w-full max-w-md flex-col items-center flex-grow hidden">
+    <div id="draw-screen" cloak class="w-full max-w-md flex-col items-center flex-grow hidden">
         <div class="w-full flex justify-between items-center mb-2 px-1">
             <h1 class="text-xl font-black text-slate-800">מצב הגרלה</h1>
             <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200 transition-colors">ערבב מחדש 🔄</button>
         </div>
         <div class="bg-white rounded-3xl shadow-sm p-3 mb-4 grid grid-cols-2 gap-4 border border-slate-100 w-full">
             <div class="text-center">
-                <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">סיבוב <span id="draw-diff-label" class="text-primary hidden"></span></span>
+                <span class="text-slate-400 text-[10px] uppercase font-bold block mb-1 tracking-widest">סיבוב <span id="draw-diff-label" class="text-primary hidden" cloak></span></span>
                 <span id="round-display" class="text-xl font-black text-slate-800">1 / 8</span>
             </div>
             <div class="text-center border-r border-slate-100">
@@ -99,7 +102,7 @@
             <h1 id="draw-settlement-name" class="text-5xl font-black text-slate-900 mt-3 tracking-tight">טוען...</h1>
         </div>
 
-        <div id="draw-prev-panel" class="w-full max-w-sm mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 flex flex-col items-center gap-2 hidden transition-all">
+        <div id="draw-prev-panel" cloak class="w-full max-w-sm mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 flex flex-col items-center gap-2 hidden transition-all">
             <div id="draw-prev-feedback" class="text-xs text-slate-700 text-center font-medium leading-tight"></div>
             <button id="draw-map-btn" class="text-[11px] font-bold border border-slate-300 text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm" onclick="toggleDrawMap()">מפה 🗺️</button>
             <div id="draw-map-wrapper" class="w-full rounded-xl overflow-hidden transition-all duration-300 h-0 opacity-0 pointer-events-none relative">
@@ -109,13 +112,13 @@
 
         <div id="draw-categories" class="grid grid-cols-2 gap-3 w-full"></div>
         
-        <div id="draw-end-controls" class="w-full flex gap-3 mt-6 mb-4 hidden">
+        <div id="draw-end-controls" cloak class="w-full flex gap-3 mt-6 mb-4 hidden">
             <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
             <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
         </div>
     </div>
 
-    <div id="place-screen" class="w-full max-w-md flex-col items-center flex-grow hidden">
+    <div id="place-screen" cloak class="w-full max-w-md flex-col items-center flex-grow hidden">
         <div class="w-full flex justify-between items-center mb-3 pt-1">
             <h1 class="text-xl font-black text-slate-800">מצב הצבה</h1>
             <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200">ערבב מחדש 🔄</button>
@@ -128,17 +131,17 @@
 
         <div id="place-categories" class="grid grid-cols-2 gap-3 w-full mb-6"></div>
 
-        <button id="place-submit-btn" onclick="submitPlacement()" class="w-full bg-primary text-white text-xl font-black py-4 rounded-2xl shadow-xl hover:bg-cyan-700 scale-tap hidden">
+        <button id="place-submit-btn" onclick="submitPlacement()" cloak class="w-full bg-primary text-white text-xl font-black py-4 rounded-2xl shadow-xl hover:bg-cyan-700 scale-tap hidden">
             בדוק תוצאות! 🎯
         </button>
 
-        <div id="place-end-controls" class="w-full flex gap-3 mt-2 mb-4 hidden">
+        <div id="place-end-controls" cloak class="w-full flex gap-3 mt-2 mb-4 hidden">
             <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
             <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
         </div>
     </div>
 
-    <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-[1000] hidden">
+    <div id="tutorial-modal" cloak class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-[1000] hidden">
         <div class="bg-white rounded-[32px] w-full max-w-sm p-6 relative shadow-2xl">
             <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors">X</button>
             
@@ -176,13 +179,13 @@
         </div>
     </div>
 
-    <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 z-[999] hidden overflow-y-auto">
+    <div id="modal" cloak class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 z-[999] hidden overflow-y-auto">
         <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center shadow-2xl flex-shrink-0 min-h-[85vh] flex flex-col relative my-auto">
             <button onclick="document.getElementById('modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-50" title="סגור חלון וצפה בלוח">X</button>
             
-            <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic z-50">שיא חדש!</div>
+            <div id="new-record-badge" cloak class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic z-50">שיא חדש!</div>
             
-            <div id="perfect-match-ribbon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap z-50">
+            <div id="perfect-match-ribbon" cloak class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap z-50">
                 🏆 שידוך מושלם!
             </div>
             
@@ -213,7 +216,7 @@
         </div>
     </div>
 
-    <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 z-[1000] hidden overflow-y-auto">
+    <div id="optimal-modal" cloak class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 z-[1000] hidden overflow-y-auto">
         <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl my-auto flex-shrink-0 min-h-[70vh] flex flex-col">
             <button onclick="document.getElementById('optimal-modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
             
@@ -244,7 +247,7 @@
         let hardData = [];
 
         /* =====================================================================
-           הגדרות בסיס 
+           הגדרות בסיס
            ===================================================================== */
         const MAX_PENALTY = 600;
         const safeFormat = (val, formatter) => {
@@ -304,7 +307,7 @@
         };
 
         /* =====================================================================
-           פונקציה למשיכת הנתונים מקבצי JSON
+           פונקציה למשיכת הנתונים מקבצי JSON - **שופרה למניעת תקיעת ה-UI**
            ===================================================================== */
         async function loadData() {
             try {
@@ -320,27 +323,44 @@
                 easyData = await easyRes.json();
                 hardData = await hardRes.json();
 
-                const overlay = document.getElementById('loading-overlay');
-                if (overlay) {
-                    overlay.style.opacity = '0';
-                    setTimeout(() => { overlay.classList.add('hidden'); }, 300);
-                }
-
+                removeLoadingOverlay();
                 initGame();
+
             } catch (error) {
                 console.error("שגיאה בטעינת הנתונים:", error);
                 const overlay = document.getElementById('loading-overlay');
                 if (overlay) {
+                    overlay.style.pointerEvents = 'auto'; // במקרה של שגיאה נאפשר אינטראקציה עם הודעת השגיאה
                     overlay.innerHTML = `
                         <div class="text-6xl mb-4">⚠️</div>
                         <h2 class="text-2xl font-black text-white mb-2">שגיאה בטעינת הנתונים</h2>
-                        <p class="text-slate-300 font-medium text-sm text-center px-4">
+                        <p class="text-slate-300 font-medium text-sm text-center px-4 mb-4">
                             לא ניתן לטעון את קבצי ה-JSON.<br>
                             אנא ודא ש- easy.json ו- hard.json נמצאים בשרת בתיקייה הנכונה.
                         </p>
+                        <button onclick="window.location.reload()" class="bg-primary text-white font-bold py-2 px-6 rounded-full shadow-lg">נסה שוב</button>
                     `;
                 }
             }
+        }
+
+        // פונקציית עזר להסרה מוחלטת של ה-Overlay כך שלא יחסום לחיצות (UI Freeze)
+        function removeLoadingOverlay() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.style.pointerEvents = 'none'; // מונע חסימה מיידית
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    overlay.style.display = 'none';
+                    if (overlay.parentNode) {
+                        overlay.parentNode.removeChild(overlay); // מסיר אותו לגמרי מהעץ של ה-HTML
+                    }
+                }, 300);
+            }
+            
+            // מסיר את הגנת ה-cloak מהאלמנטים כדי שיוכלו להיות מוצגים כראוי
+            document.querySelectorAll('[cloak]').forEach(el => el.removeAttribute('cloak'));
         }
 
         function checkTutorial() {
