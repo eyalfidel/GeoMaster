@@ -7,17 +7,15 @@
     <meta name="description" content="שחקו במשחק הדירוגים הגאוגרפי של ישראל. שני מצבי משחק, מפות וסיכומים!">
     
     <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png">
     
-    <!-- קישור לעיצוב הסטטי המקומי שלך (מנקה הבהובים מהרגע הראשון) -->
     <link rel="stylesheet" href="style.css">
     
-    <!-- ספריות חיצוניות -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     
-    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -27,21 +25,18 @@
         }
     </script>
 
-    <!-- קובץ הלוגיקה שלך -->
     <script src="app.js" defer></script>
 </head>
 <body>
 
-    <!-- מסך הטעינה הראשון שעולה -->
     <div id="startup-loader">
         <div style="font-size: 64px; margin-bottom: 10px;">📍</div>
-        <div class="loader-spinner"></div>
-        <h2 style="font-size: 24px; font-weight: 900; margin: 0 0 10px 0;">טוען נתונים...</h2>
-        <p style="color: #94a3b8; font-size: 14px; margin: 0;">מכין את מפת היישובים של ישראל</p>
+        <div id="spinner-element" class="loader-spinner"></div>
+        <h2 id="loader-title" style="font-size: 24px; font-weight: 900; margin: 0 0 10px 0;">טוען נתונים...</h2>
+        <p id="loader-subtitle" style="color: #94a3b8; font-size: 14px; margin: 0;">מכין את מפת היישובים של ישראל</p>
         <button id="loader-reload-btn" onclick="window.location.reload()" style="display: none; margin-top: 20px; padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer;">שגיאה - נסה שוב</button>
     </div>
 
-    <!-- מעטפת המשחק - נחשפת מתוך app.js רק לאחר שהכל נטען -->
     <div id="app-content">
         <div class="min-h-screen flex flex-col items-center p-4 w-full max-w-md mx-auto relative">
 
@@ -72,7 +67,6 @@
                 </div>
             </header>
 
-            <!-- מסך הגרלה -->
             <div id="draw-screen" class="w-full hidden flex-col items-center flex-grow">
                 <div class="w-full flex justify-between items-center mb-2 px-1">
                     <h1 class="text-xl font-black text-slate-800">מצב הגרלה</h1>
@@ -88,14 +82,11 @@
                         <span id="draw-score" class="text-xl font-black text-primary">0</span>
                     </div>
                 </div>
-
                 <div class="flex justify-center gap-2 py-1 mb-2 w-full" id="draw-dots"></div>
-
                 <div id="draw-settlement-container" class="w-full py-4 bg-white rounded-3xl shadow-sm border border-slate-100 text-center flex flex-col items-center relative min-h-[140px] mb-2">
                     <span class="text-slate-400 font-bold text-[10px] bg-slate-50 px-3 py-1 rounded-full uppercase tracking-widest">היישוב הנוכחי</span>
                     <h1 id="draw-settlement-name" class="text-5xl font-black text-slate-900 mt-3 tracking-tight">...</h1>
                 </div>
-
                 <div id="draw-prev-panel" class="w-full mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 hidden flex-col items-center gap-2 transition-all">
                     <div id="draw-prev-feedback" class="text-xs text-slate-700 text-center font-medium leading-tight"></div>
                     <button id="draw-map-btn" class="text-[11px] font-bold border border-slate-300 text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm" onclick="toggleDrawMap()">מפה 🗺️</button>
@@ -103,33 +94,24 @@
                         <div id="draw-map" class="w-full h-full bg-slate-200 z-10"></div>
                     </div>
                 </div>
-
                 <div id="draw-categories" class="grid grid-cols-2 gap-3 w-full"></div>
-                
                 <div id="draw-end-controls" class="w-full gap-3 mt-6 mb-4 hidden">
                     <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
                     <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
                 </div>
             </div>
 
-            <!-- מסך הצבה -->
             <div id="place-screen" class="w-full hidden flex-col items-center flex-grow">
                 <div class="w-full flex justify-between items-center mb-3 pt-1">
                     <h1 class="text-xl font-black text-slate-800">מצב הצבה</h1>
                     <button onclick="initGame()" class="text-xs text-slate-400 font-bold bg-slate-100 px-3 py-1 rounded-full hover:bg-slate-200">ערבב מחדש 🔄</button>
                 </div>
-
                 <div id="place-bank-container" class="w-full bg-white p-3 rounded-2xl shadow-sm border border-slate-100 mb-4 hidden">
                     <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest block text-center mb-2">בנק היישובים (לחץ לבחירה)</span>
                     <div id="place-bank" class="flex flex-wrap justify-center gap-2"></div>
                 </div>
-
                 <div id="place-categories" class="grid grid-cols-2 gap-3 w-full mb-6"></div>
-
-                <button id="place-submit-btn" onclick="submitPlacement()" class="w-full bg-primary text-white text-xl font-black py-4 rounded-2xl shadow-xl hover:bg-cyan-700 scale-tap hidden">
-                    בדוק תוצאות! 🎯
-                </button>
-
+                <button id="place-submit-btn" onclick="submitPlacement()" class="w-full bg-primary text-white text-xl font-black py-4 rounded-2xl shadow-xl hover:bg-cyan-700 scale-tap hidden">בדוק תוצאות! 🎯</button>
                 <div id="place-end-controls" class="w-full gap-3 mt-2 mb-4 hidden">
                     <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
                     <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
@@ -139,30 +121,21 @@
         </div>
     </div>
 
-    <!-- Modals (עודכנו ל-items-start למניעת חיתוך, הוספו כפתורי סגירה למטה, עודכן תוכן מדריך וטקסט שיתוף) -->
     <div id="modals-container">
-        
         <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-start justify-center p-4 pt-10 pb-10 z-[1000] overflow-y-auto w-full h-full">
             <div class="bg-white rounded-[32px] w-full max-w-sm mx-auto p-6 relative shadow-2xl my-auto">
-                <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-10">X</button>
-                
-                <div class="text-center mb-6 mt-2">
-                    <span class="text-4xl block mb-2">📍</span>
-                    <h2 class="text-2xl font-black text-slate-900">איך משחקים?</h2>
-                </div>
-                
+                <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-10">X</button>
+                <div class="text-center mb-6 mt-2"><span class="text-4xl block mb-2">📍</span><h2 class="text-2xl font-black text-slate-900">איך משחקים?</h2></div>
                 <div class="text-slate-600 text-sm space-y-4 font-medium leading-relaxed max-h-[50vh] overflow-y-auto pr-1">
                     <p>המשחק מורכב מ-<b>8 סיבובים</b>. המטרה היא לשבץ כל יישוב בקטגוריה בה הוא יקבל את <b>הדירוג הטוב ביותר</b> (מקום 1). <span class="text-primary font-bold">כל קטגוריה ניתנת לשימוש פעם אחת בלבד.</span></p>
-                    
                     <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
                         <p><b>🕹️ מצבי המשחק:</b></p>
                         <ul class="list-disc list-inside space-y-1 text-slate-500">
-                            <li><b class="text-slate-700">מצב קל / קשה:</b> בקל יוגרלו רק 250 היישובים המוכרים והגדולים. בקשה תוגרל כל המדינה.</li>
+                            <li><b class="text-slate-700">מצב קל / קשה:</b> בקל יוגרלו רק 250 היישובים המוכרים. בקשה תוגרל כל המדינה.</li>
                             <li><b class="text-slate-700">הגרלה (1-1):</b> כל סיבוב מוגרל יישוב אחד שצריך לשבץ מיד.</li>
-                            <li><b class="text-slate-700">הצבה (8):</b> כל 8 היישובים מוגרלים מראש, ועליכם לחלק אותם אסטרטגית לקטגוריות השונות (כמו פאזל).</li>
+                            <li><b class="text-slate-700">הצבה (8):</b> כל 8 היישובים מוגרלים מראש, ועליכם לחלק אותם אסטרטגית.</li>
                         </ul>
                     </div>
-
                     <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
                         <p><b>📏 חוקי מדידה:</b></p>
                         <ul class="list-disc list-inside space-y-1 text-slate-500">
@@ -173,61 +146,39 @@
                         </ul>
                     </div>
                 </div>
-                
-                <button onclick="closeTutorial()" class="w-full mt-6 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-cyan-700 active:scale-95 transition-all text-lg">הבנתי, בואו נשחק!</button>
-                <button onclick="closeTutorial()" class="w-full mt-2 text-slate-500 font-bold py-2 text-sm">סגור חלון</button>
+                <button onclick="closeTutorial()" class="w-full mt-6 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-all text-lg">הבנתי!</button>
             </div>
         </div>
 
         <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden items-start justify-center p-4 pt-10 pb-10 z-[999] overflow-y-auto w-full h-full">
             <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center shadow-2xl flex-shrink-0 flex flex-col relative my-auto">
-                <button onclick="closeEndGameModal()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-50" title="סגור חלון וצפה בלוח">X</button>
-                
+                <button onclick="closeEndGameModal()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
                 <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic z-50">שיא חדש!</div>
-                
                 <div id="perfect-match-ribbon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap z-50">🏆 שידוך מושלם!</div>
-                
                 <div class="flex-grow flex flex-col space-y-4 pt-2">
                     <h2 class="text-3xl font-black text-slate-900 leading-tight">כל הכבוד!</h2>
-                    
-                    <div class="py-3 bg-slate-50 rounded-3xl border border-slate-100 shrink-0">
-                        <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span>
-                        <div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div>
-                    </div>
-
-                    <div class="w-full flex-grow min-h-[160px] bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative shrink-0">
-                        <div id="end-map" class="w-full h-full"></div>
-                    </div>
-
+                    <div class="py-3 bg-slate-50 rounded-3xl border border-slate-100 shrink-0"><span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span><div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div></div>
+                    <div class="w-full flex-grow min-h-[160px] bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative shrink-0"><div id="end-map" class="w-full h-full"></div></div>
                     <div id="round-history" class="text-right text-[11px] bg-slate-50 p-3 rounded-2xl space-y-2 overflow-y-auto max-h-[25vh] border border-slate-100 shadow-inner shrink-0"></div>
                 </div>
-
                 <div class="space-y-3 pt-4 mt-auto shrink-0 border-t border-slate-100">
                     <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
                     <button onclick="showOptimalGame()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 scale-tap">המשחק האופטימלי 💡</button>
                     <button onclick="closeEndGameModal(); initGame();" class="w-full text-slate-500 font-bold py-2 text-sm">משחק חדש</button>
-                    <button onclick="closeEndGameModal()" class="w-full text-slate-400 font-bold py-1 text-xs">סגור חלון וצפה בלוח</button>
                 </div>
             </div>
         </div>
 
         <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden items-start justify-center p-4 pt-10 pb-10 z-[1000] overflow-y-auto w-full h-full">
-            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center space-y-5 relative shadow-2xl flex-shrink-0 flex flex-col my-auto">
+            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center shadow-2xl flex-shrink-0 flex flex-col my-auto">
                 <button onclick="hideEl('optimal-modal')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
-                
                 <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
                 <p class="text-xs text-slate-500 font-medium px-2">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
-                
-                <div class="py-3 bg-success/10 rounded-3xl border border-success/20 shrink-0">
-                    <span class="text-success text-[10px] font-bold uppercase tracking-widest">ציון אופטימלי אפשרי</span>
-                    <div id="optimal-score" class="text-5xl font-black text-success tracking-tighter">0</div>
-                </div>
-
+                <div class="py-3 bg-success/10 rounded-3xl border border-success/20 shrink-0"><span class="text-success text-[10px] font-bold uppercase tracking-widest">ציון אופטימלי אפשרי</span><div id="optimal-score" class="text-5xl font-black text-success tracking-tighter">0</div></div>
                 <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-[35vh] flex-grow border border-slate-100 shadow-inner"></div>
-
                 <div class="pt-4 mt-auto shrink-0 border-t border-slate-100 space-y-3">
                     <button onclick="shareOptimalResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
-                    <button onclick="hideEl('optimal-modal')" class="w-full text-slate-500 font-bold py-2 text-sm">חזור לסיכום שלי</button>
+                    <button onclick="hideEl('optimal-modal')" class="w-full text-slate-500 font-bold py-2 text-sm">סגור</button>
                 </div>
             </div>
         </div>
