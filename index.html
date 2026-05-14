@@ -165,26 +165,30 @@
     </div>
 
     <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-start p-4 z-[999] hidden overflow-y-auto">
-        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl mt-8 mb-8">
+        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl mt-8 mb-8 flex-shrink-0">
             <button onclick="document.getElementById('modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors" title="סגור חלון וצפה בלוח">X</button>
             
             <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic">שיא חדש!</div>
             
-            <h2 class="text-3xl font-black text-slate-900 leading-tight">כל הכבוד!</h2>
+            <div id="perfect-match-ribbon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap">
+                🏆 שידוך מושלם!
+            </div>
+            
+            <h2 class="text-3xl font-black text-slate-900 leading-tight mt-2">כל הכבוד!</h2>
             
             <div class="py-4 bg-slate-50 rounded-3xl border border-slate-100">
                 <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span>
                 <div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div>
             </div>
 
-            <div class="w-full h-48 bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative">
+            <div class="w-full h-48 sm:h-64 bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative">
                 <div id="end-map" class="w-full h-full"></div>
             </div>
 
-            <div id="round-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-40 border border-slate-100 shadow-inner"></div>
+            <div id="round-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-[30vh] border border-slate-100 shadow-inner"></div>
 
             <div class="space-y-3 pt-2">
-                <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
+                <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
                 
                 <button onclick="showOptimalGame()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 scale-tap">
                     המשחק האופטימלי 💡
@@ -196,19 +200,25 @@
     </div>
 
     <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-start p-4 z-[1000] hidden overflow-y-auto">
-        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl mt-8 mb-8">
+        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl mt-8 mb-8 flex-shrink-0">
             <button onclick="document.getElementById('optimal-modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors">X</button>
             
             <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
-            <p class="text-xs text-slate-500 font-medium">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
+            <p class="text-xs text-slate-500 font-medium px-2">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
             
             <div class="py-3 bg-success/10 rounded-3xl border border-success/20">
                 <span class="text-success text-[10px] font-bold uppercase tracking-widest">ציון אופטימלי אפשרי</span>
                 <div id="optimal-score" class="text-5xl font-black text-success tracking-tighter">0</div>
             </div>
 
-            <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-60 border border-slate-100 shadow-inner">
-                </div>
+            <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-[40vh] border border-slate-100 shadow-inner">
+            </div>
+
+            <div class="pt-2">
+                <button onclick="shareOptimalResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">
+                    שתף השוואה 📊
+                </button>
+            </div>
         </div>
     </div>
     
@@ -36217,7 +36227,9 @@
         /* =====================================================================
            מסך סיום ומפת סיכום (End Game)
            ===================================================================== */
-        function openEndGameModal() { document.getElementById('modal').classList.remove('hidden'); }
+        // משתנים גלובליים לשמירת נתוני האופטימום
+        let globalOptimalScore = 0;
+        let globalOptimalHtml = "";
 
         function showEndGame() {
             openEndGameModal();
@@ -36233,6 +36245,16 @@
                 recordBadge.classList.add('hidden');
             }
 
+            // חישוב המשחק האופטימלי ברקע כדי לדעת אם להציג את ריבון "השידוך המושלם"
+            calculateOptimalGameData();
+            
+            const ribbon = document.getElementById('perfect-match-ribbon');
+            if (totalScore === globalOptimalScore) {
+                ribbon.classList.remove('hidden');
+            } else {
+                ribbon.classList.add('hidden');
+            }
+
             document.getElementById('round-history').innerHTML = gameHistory.map((h, index) => `
                 <div class="flex justify-between border-b border-slate-200 pb-1 italic cursor-pointer hover:bg-slate-200 transition-colors px-2 py-1 rounded-md" onclick="focusEndMapMarker(${index})">
                     <span>${h.icon} <b>${h.name}</b> (${h.catLabel})</span>
@@ -36240,7 +36262,6 @@
                 </div>
             `).join('');
 
-            // הגדלת המפה אוטומטית כדי שיהיה מקום לפופ-אפ המפורט!
             const mapWrapper = document.getElementById('end-map').parentElement;
             mapWrapper.classList.remove('h-48');
             mapWrapper.classList.add('h-72');
@@ -36263,7 +36284,6 @@
                     if(lat && lon) {
                         const marker = L.marker([lat, lon]).addTo(endMapObj);
                         
-                        // בניית רשימת כל הנתונים של היישוב
                         let allDataHtml = `<div class="text-right text-[10px] mt-2 pt-2 border-t border-slate-200 space-y-1 h-28 overflow-y-auto pr-1">`;
                         categories.forEach(c => {
                             const dataConfig = categoryDataMap[c.id];
@@ -36271,7 +36291,6 @@
                             const formatted = dataConfig.format(rawVal);
                             let rankVal = parseInt(String(h.obj[c.id] || "1221").replace(/,/g, '')) || 1221;
                             
-                            // הדגשת הקטגוריה שנבחרה במשחק
                             if (c.label === h.catLabel) {
                                 allDataHtml += `<div class="text-primary font-bold bg-primary/10 rounded px-1 py-0.5">${c.icon} ${c.label}: ${formatted} (#${rankVal})</div>`;
                             } else {
@@ -36312,46 +36331,23 @@
         function focusEndMapMarker(idx) {
             if (endMapObj && endMarkers[idx]) {
                 const marker = endMarkers[idx];
-                
-                // חישוב היסט (Offset) גאוני: מזיזים את המצלמה 120 פיקסלים צפונה, ככה היישוב יושב למטה והפופ-אפ לא נחתך
                 const targetZoom = 11;
                 const targetPoint = endMapObj.project(marker.getLatLng(), targetZoom).subtract([0, 120]); 
                 const targetLatLng = endMapObj.unproject(targetPoint, targetZoom);
-                
                 endMapObj.flyTo(targetLatLng, targetZoom, { animate: true, duration: 1 });
-                
-                // פתיחת הפופ-אפ מיד אחרי תחילת התעופה
                 setTimeout(() => { marker.openPopup(); }, 250);
-                
-                // גולל את המסך כך שהמפה תהיה במרכז (חשוב במובייל כשהרשימה ארוכה)
                 document.getElementById('end-map').parentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
-        function shareResults() {
-            const emojis = gameHistory.map(h => h.actualRank < 150 ? '🟩' : h.actualRank < 400 ? '🟨' : '🟥').join('');
-            const text = `משחק היישובים V3 📍\n` +
-                         `מצב: ${diff === 'easy' ? 'קל' : 'קשה'} | ${mode === 'draw' ? 'הגרלה' : 'הצבה'}\n` +
-                         `תוצאה: ${totalScore} נק'\n` +
-                         `${emojis}\n` +
-                         `${window.location.href}`; 
-            
-            if (navigator.share) { navigator.share({ text }); } 
-            else { navigator.clipboard.writeText(text); alert("הועתק ללוח!"); }
-        }
-
         /* =====================================================================
-           מחשבון התוצאה האופטימלית (Branch and Bound Algorithm)
+           חישוב התוצאה האופטימלית (פועל ברקע בסיום משחק)
            ===================================================================== */
-        /* =====================================================================
-           מחשבון התוצאה האופטימלית (Branch and Bound Algorithm)
-           ===================================================================== */
-        function showOptimalGame() {
+        function calculateOptimalGameData() {
             const n = sessionSettlements.length;
             let minScore = Infinity;
             let bestAssignment = [];
             
-            // יצירת מטריצת המחירים (דירוגים)
             const costs = [];
             for (let i = 0; i < n; i++) {
                 costs[i] = [];
@@ -36361,18 +36357,13 @@
                 }
             }
 
-            // פונקציה רקורסיבית למציאת מינימום מהיר
             function solve(settlementIdx, currentScore, currentAssignment, usedCategories) {
-                // גיזום: אם כבר עברנו את המינימום שמצאנו, אין טעם להמשיך בענף הזה
                 if (currentScore >= minScore) return; 
-                
-                // הגענו לסוף הענף ומצאנו תוצאה טובה יותר
                 if (settlementIdx === n) {
                     minScore = currentScore;
                     bestAssignment = [...currentAssignment];
                     return;
                 }
-
                 for (let c = 0; c < n; c++) {
                     if (!usedCategories[c]) {
                         usedCategories[c] = true;
@@ -36384,21 +36375,15 @@
                 }
             }
 
-            // הפעלת החישוב
             solve(0, 0, [], Array(n).fill(false));
-
-            // הצגת הנתונים בחלונית
-            document.getElementById('optimal-score').innerText = minScore.toLocaleString();
             
-            const optimalHtml = bestAssignment.map((catIdx, sIdx) => {
+            globalOptimalScore = minScore;
+            
+            globalOptimalHtml = bestAssignment.map((catIdx, sIdx) => {
                 const s = sessionSettlements[sIdx];
                 const cat = categories[catIdx];
-                
-                // חישוב הדירוג האופטימלי
                 let actualRank = parseInt(String(s[cat.id] || "1221").replace(/,/g, '')) || 1221;
                 let rankText = actualRank > MAX_PENALTY ? `מקום ${actualRank} (${MAX_PENALTY} נק')` : `מקום ${actualRank}`;
-
-                // שליפת הבחירה של השחקן מהיסטוריית המשחק לצורך השוואה
                 const userChoice = gameHistory.find(h => h.name === s["שם יישוב"]);
                 let comparisonHtml = "";
                 
@@ -36419,10 +36404,53 @@
                     ${comparisonHtml}
                 </div>`;
             }).join('');
+        }
 
-            document.getElementById('optimal-history').innerHTML = optimalHtml;
+        function showOptimalGame() {
+            document.getElementById('optimal-score').innerText = globalOptimalScore.toLocaleString();
+            document.getElementById('optimal-history').innerHTML = globalOptimalHtml;
             document.getElementById('optimal-modal').classList.remove('hidden');
         }
+
+        /* =====================================================================
+           פונקציות שיתוף מפורטות
+           ===================================================================== */
+        function shareResults() {
+            let details = gameHistory.map(h => {
+                let emoji = h.actualRank <= 150 ? '🟩' : h.actualRank <= 400 ? '🟨' : '🟥';
+                return `${emoji} ${h.name} (${h.catLabel}) - מקום ${h.actualRank}`;
+            }).join('\n');
+
+            let perfectMatchText = (totalScore === globalOptimalScore) ? `\n🏆 השגתי את השידוך המושלם!\n` : `\n`;
+
+            const text = `משחק היישובים V3 📍\n` +
+                         `מצב: ${diff === 'easy' ? 'קל' : 'קשה'} | ${mode === 'draw' ? 'הגרלה' : 'הצבה'}\n` +
+                         `תוצאה סופית: ${totalScore} נק'\n` +
+                         perfectMatchText +
+                         `\n${details}\n\n` +
+                         `${window.location.href}`; 
+            
+            if (navigator.share) { navigator.share({ text }); } 
+            else { navigator.clipboard.writeText(text); alert("הטקסט הועתק ללוח!"); }
+        }
+
+        function shareOptimalResults() {
+            const diffScore = totalScore - globalOptimalScore;
+            let comparisonText = diffScore === 0 
+                ? "הגעתי לשידוך המושלם בדיוק! 🏆" 
+                : `הייתי במרחק של ${diffScore} נקודות מהשידוך המושלם! 😅`;
+
+            const text = `משחק היישובים 📍 - אתגר השידוך המושלם\n\n` +
+                         `ציון שלי: ${totalScore}\n` +
+                         `ציון אופטימלי: ${globalOptimalScore}\n` +
+                         `${comparisonText}\n\n` +
+                         `נסו בעצמכם:\n` +
+                         `${window.location.href}`;
+
+            if (navigator.share) { navigator.share({ text }); } 
+            else { navigator.clipboard.writeText(text); alert("הטקסט הועתק ללוח!"); }
+        }
+
     </script>
 </body>
 </html>
