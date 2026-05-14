@@ -4,6 +4,7 @@ body {
     font-family: 'Heebo', sans-serif !important; 
     overflow-x: hidden; 
     -webkit-tap-highlight-color: transparent; 
+    user-select: none;
 }
 
 #startup-loader {
@@ -25,14 +26,20 @@ body {
 button { touch-action: manipulation; cursor: pointer; }
 .scale-tap:active { transform: scale(0.96); }
 
-/* אכיפת הסימון במצב הצבה מול Tailwind */
+/* סימון יישוב נבחר במצב הצבה - אכיפה מול Tailwind */
 .selected-bank-item { 
     outline: 3px solid #0891b2 !important; 
     background-color: #e0f2fe !important; 
     color: #0369a1 !important;
     transform: scale(1.05); 
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
 
+.hidden { display: none !important; }
 .slot-filled { background-color: #f0fdf4; border-color: #86efac; }
 .leaflet-control-attribution { font-size: 8px !important; }
 .leaflet-control-zoom { border: none !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; }
+
+/* עיצוב פופאפ המפה */
+.leaflet-popup-content-wrapper { border-radius: 16px; padding: 4px; }
+.leaflet-popup-content { margin: 8px 12px; line-height: 1.4; }
