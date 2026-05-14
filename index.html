@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     
-    <!-- Tailwind CDN (נשאר לצורך העיצוב הדינאמי, אבל עכשיו כשהלוגיקה בחוץ, הוא יעבוד פי 10 מהר יותר) -->
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -27,7 +27,7 @@
         }
     </script>
 
-    <!-- קובץ הלוגיקה שלך - נטען רק אחרי שה-HTML מוכן (defer) -->
+    <!-- קובץ הלוגיקה שלך -->
     <script src="app.js" defer></script>
 </head>
 <body>
@@ -139,14 +139,21 @@
         </div>
     </div>
 
-    <!-- Modals -->
+    <!-- Modals (עודכנו ל-items-start למניעת חיתוך, הוספו כפתורי סגירה למטה, עודכן תוכן מדריך וטקסט שיתוף) -->
     <div id="modals-container">
-        <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-center justify-center p-4 z-[1000]">
-            <div class="bg-white rounded-[32px] w-full max-w-sm mx-auto p-6 relative shadow-2xl">
-                <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors">X</button>
-                <div class="text-center mb-6 mt-2"><span class="text-4xl block mb-2">📍</span><h2 class="text-2xl font-black text-slate-900">איך משחקים?</h2></div>
-                <div class="text-slate-600 text-sm space-y-4 font-medium leading-relaxed h-80 overflow-y-auto pr-1">
+        
+        <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-start justify-center p-4 pt-10 pb-10 z-[1000] overflow-y-auto w-full h-full">
+            <div class="bg-white rounded-[32px] w-full max-w-sm mx-auto p-6 relative shadow-2xl my-auto">
+                <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-10">X</button>
+                
+                <div class="text-center mb-6 mt-2">
+                    <span class="text-4xl block mb-2">📍</span>
+                    <h2 class="text-2xl font-black text-slate-900">איך משחקים?</h2>
+                </div>
+                
+                <div class="text-slate-600 text-sm space-y-4 font-medium leading-relaxed max-h-[50vh] overflow-y-auto pr-1">
                     <p>המשחק מורכב מ-<b>8 סיבובים</b>. המטרה היא לשבץ כל יישוב בקטגוריה בה הוא יקבל את <b>הדירוג הטוב ביותר</b> (מקום 1). <span class="text-primary font-bold">כל קטגוריה ניתנת לשימוש פעם אחת בלבד.</span></p>
+                    
                     <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
                         <p><b>🕹️ מצבי המשחק:</b></p>
                         <ul class="list-disc list-inside space-y-1 text-slate-500">
@@ -155,38 +162,73 @@
                             <li><b class="text-slate-700">הצבה (8):</b> כל 8 היישובים מוגרלים מראש, ועליכם לחלק אותם אסטרטגית לקטגוריות השונות (כמו פאזל).</li>
                         </ul>
                     </div>
+
+                    <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
+                        <p><b>📏 חוקי מדידה:</b></p>
+                        <ul class="list-disc list-inside space-y-1 text-slate-500">
+                            <li><b>הכי רחוק מהמרכז:</b> נמדד אווירית מתחנת <span class="text-slate-800 font-bold">רכבת השלום</span>.</li>
+                            <li><b>הכי רחוק מהים:</b> מרחק אל הים התיכון בלבד.</li>
+                            <li><b>הכי גבוה:</b> לפי גובה <span class="text-slate-800 font-bold">ממוצע</span> (למ"ס).</li>
+                            <li><b>שם ארוך:</b> ספירת אותיות בלבד, <span class="text-slate-800 font-bold">ללא רווחים ומקפים</span>.</li>
+                        </ul>
+                    </div>
                 </div>
+                
                 <button onclick="closeTutorial()" class="w-full mt-6 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-cyan-700 active:scale-95 transition-all text-lg">הבנתי, בואו נשחק!</button>
+                <button onclick="closeTutorial()" class="w-full mt-2 text-slate-500 font-bold py-2 text-sm">סגור חלון</button>
             </div>
         </div>
 
-        <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center p-4 z-[999] overflow-y-auto">
-            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center shadow-2xl flex-shrink-0 min-h-[85vh] flex flex-col relative my-auto">
-                <button onclick="closeEndGameModal()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-50">X</button>
+        <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden items-start justify-center p-4 pt-10 pb-10 z-[999] overflow-y-auto w-full h-full">
+            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center shadow-2xl flex-shrink-0 flex flex-col relative my-auto">
+                <button onclick="closeEndGameModal()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-50" title="סגור חלון וצפה בלוח">X</button>
+                
                 <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic z-50">שיא חדש!</div>
+                
                 <div id="perfect-match-ribbon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap z-50">🏆 שידוך מושלם!</div>
+                
                 <div class="flex-grow flex flex-col space-y-4 pt-2">
                     <h2 class="text-3xl font-black text-slate-900 leading-tight">כל הכבוד!</h2>
-                    <div class="py-3 bg-slate-50 rounded-3xl border border-slate-100 shrink-0"><span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span><div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div></div>
-                    <div class="w-full flex-grow min-h-[160px] bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative shrink-0"><div id="end-map" class="w-full h-full"></div></div>
+                    
+                    <div class="py-3 bg-slate-50 rounded-3xl border border-slate-100 shrink-0">
+                        <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span>
+                        <div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div>
+                    </div>
+
+                    <div class="w-full flex-grow min-h-[160px] bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative shrink-0">
+                        <div id="end-map" class="w-full h-full"></div>
+                    </div>
+
                     <div id="round-history" class="text-right text-[11px] bg-slate-50 p-3 rounded-2xl space-y-2 overflow-y-auto max-h-[25vh] border border-slate-100 shadow-inner shrink-0"></div>
                 </div>
+
                 <div class="space-y-3 pt-4 mt-auto shrink-0 border-t border-slate-100">
                     <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
                     <button onclick="showOptimalGame()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 scale-tap">המשחק האופטימלי 💡</button>
                     <button onclick="closeEndGameModal(); initGame();" class="w-full text-slate-500 font-bold py-2 text-sm">משחק חדש</button>
+                    <button onclick="closeEndGameModal()" class="w-full text-slate-400 font-bold py-1 text-xs">סגור חלון וצפה בלוח</button>
                 </div>
             </div>
         </div>
 
-        <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden flex-col items-center justify-center p-4 z-[1000] overflow-y-auto">
-            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center space-y-5 relative shadow-2xl my-auto flex-shrink-0 min-h-[70vh] flex flex-col">
+        <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden items-start justify-center p-4 pt-10 pb-10 z-[1000] overflow-y-auto w-full h-full">
+            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center space-y-5 relative shadow-2xl flex-shrink-0 flex flex-col my-auto">
                 <button onclick="hideEl('optimal-modal')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
+                
                 <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
                 <p class="text-xs text-slate-500 font-medium px-2">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
-                <div class="py-3 bg-success/10 rounded-3xl border border-success/20 shrink-0"><span class="text-success text-[10px] font-bold uppercase tracking-widest">ציון אופטימלי אפשרי</span><div id="optimal-score" class="text-5xl font-black text-success tracking-tighter">0</div></div>
-                <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto flex-grow border border-slate-100 shadow-inner"></div>
-                <div class="pt-4 mt-auto shrink-0 border-t border-slate-100"><button onclick="shareOptimalResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף השוואה 📊</button></div>
+                
+                <div class="py-3 bg-success/10 rounded-3xl border border-success/20 shrink-0">
+                    <span class="text-success text-[10px] font-bold uppercase tracking-widest">ציון אופטימלי אפשרי</span>
+                    <div id="optimal-score" class="text-5xl font-black text-success tracking-tighter">0</div>
+                </div>
+
+                <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-[35vh] flex-grow border border-slate-100 shadow-inner"></div>
+
+                <div class="pt-4 mt-auto shrink-0 border-t border-slate-100 space-y-3">
+                    <button onclick="shareOptimalResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
+                    <button onclick="hideEl('optimal-modal')" class="w-full text-slate-500 font-bold py-2 text-sm">חזור לסיכום שלי</button>
+                </div>
             </div>
         </div>
     </div>
