@@ -91,7 +91,7 @@
                     <div id="draw-prev-feedback" class="text-xs text-slate-700 text-center font-medium leading-tight"></div>
                     <button id="draw-map-btn" class="text-[11px] font-bold border border-slate-300 text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm" onclick="toggleDrawMap()">מפה 🗺️</button>
                     <div id="draw-map-wrapper" class="w-full rounded-xl overflow-hidden transition-all duration-300 h-0 opacity-0 pointer-events-none relative">
-                        <div id="draw-map" class="w-full h-full bg-slate-200 z-10"></div>
+                        <div id="draw-map" class="absolute inset-0 z-10 bg-slate-200"></div>
                     </div>
                 </div>
                 <div id="draw-categories" class="grid grid-cols-2 gap-3 w-full"></div>
@@ -122,18 +122,19 @@
     </div>
 
     <div id="modals-container">
+        
         <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden items-start justify-center p-4 pt-10 pb-10 z-[1000] overflow-y-auto w-full h-full">
             <div class="bg-white rounded-[32px] w-full max-w-sm mx-auto p-6 relative shadow-2xl my-auto">
-                <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-10">X</button>
+                <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-10">X</button>
                 <div class="text-center mb-6 mt-2"><span class="text-4xl block mb-2">📍</span><h2 class="text-2xl font-black text-slate-900">איך משחקים?</h2></div>
                 <div class="text-slate-600 text-sm space-y-4 font-medium leading-relaxed max-h-[50vh] overflow-y-auto pr-1">
                     <p>המשחק מורכב מ-<b>8 סיבובים</b>. המטרה היא לשבץ כל יישוב בקטגוריה בה הוא יקבל את <b>הדירוג הטוב ביותר</b> (מקום 1). <span class="text-primary font-bold">כל קטגוריה ניתנת לשימוש פעם אחת בלבד.</span></p>
                     <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
                         <p><b>🕹️ מצבי המשחק:</b></p>
                         <ul class="list-disc list-inside space-y-1 text-slate-500">
-                            <li><b class="text-slate-700">מצב קל / קשה:</b> בקל יוגרלו רק 250 היישובים המוכרים. בקשה תוגרל כל המדינה.</li>
+                            <li><b class="text-slate-700">מצב קל / קשה:</b> בקל יוגרלו רק 250 היישובים המוכרים והגדולים. בקשה תוגרל כל המדינה.</li>
                             <li><b class="text-slate-700">הגרלה (1-1):</b> כל סיבוב מוגרל יישוב אחד שצריך לשבץ מיד.</li>
-                            <li><b class="text-slate-700">הצבה (8):</b> כל 8 היישובים מוגרלים מראש, ועליכם לחלק אותם אסטרטגית.</li>
+                            <li><b class="text-slate-700">הצבה (8):</b> כל 8 היישובים מוגרלים מראש, ועליכם לחלק אותם אסטרטגית לקטגוריות השונות.</li>
                         </ul>
                     </div>
                     <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-2 text-xs">
@@ -146,31 +147,39 @@
                         </ul>
                     </div>
                 </div>
-                <button onclick="closeTutorial()" class="w-full mt-6 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-all text-lg">הבנתי!</button>
+                <button onclick="closeTutorial()" class="w-full mt-6 bg-primary text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-cyan-700 active:scale-95 transition-all text-lg">הבנתי, בואו נשחק!</button>
+                <button onclick="closeTutorial()" class="w-full mt-2 text-slate-500 font-bold py-2 text-sm">סגור חלון</button>
             </div>
         </div>
 
         <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden items-start justify-center p-4 pt-10 pb-10 z-[999] overflow-y-auto w-full h-full">
             <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center shadow-2xl flex-shrink-0 flex flex-col relative my-auto">
-                <button onclick="closeEndGameModal()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
+                <button onclick="closeEndGameModal()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-50" title="סגור חלון וצפה בלוח">X</button>
                 <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic z-50">שיא חדש!</div>
                 <div id="perfect-match-ribbon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap z-50">🏆 שידוך מושלם!</div>
+                
                 <div class="flex-grow flex flex-col space-y-4 pt-2">
                     <h2 class="text-3xl font-black text-slate-900 leading-tight">כל הכבוד!</h2>
                     <div class="py-3 bg-slate-50 rounded-3xl border border-slate-100 shrink-0"><span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span><div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div></div>
-                    <div class="w-full flex-grow min-h-[160px] bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative shrink-0"><div id="end-map" class="w-full h-full"></div></div>
+                    
+                    <div class="w-full flex-grow min-h-[220px] bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative shrink-0">
+                        <div id="end-map" class="absolute inset-0 z-10"></div>
+                    </div>
+                    
                     <div id="round-history" class="text-right text-[11px] bg-slate-50 p-3 rounded-2xl space-y-2 overflow-y-auto max-h-[25vh] border border-slate-100 shadow-inner shrink-0"></div>
                 </div>
+
                 <div class="space-y-3 pt-4 mt-auto shrink-0 border-t border-slate-100">
                     <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
                     <button onclick="showOptimalGame()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 scale-tap">המשחק האופטימלי 💡</button>
                     <button onclick="closeEndGameModal(); initGame();" class="w-full text-slate-500 font-bold py-2 text-sm">משחק חדש</button>
+                    <button onclick="closeEndGameModal()" class="w-full text-slate-400 font-bold py-1 text-xs">סגור חלון וצפה בלוח</button>
                 </div>
             </div>
         </div>
 
         <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md hidden items-start justify-center p-4 pt-10 pb-10 z-[1000] overflow-y-auto w-full h-full">
-            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center shadow-2xl flex-shrink-0 flex flex-col my-auto">
+            <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center space-y-5 relative shadow-2xl flex-shrink-0 flex flex-col my-auto">
                 <button onclick="hideEl('optimal-modal')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
                 <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
                 <p class="text-xs text-slate-500 font-medium px-2">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
