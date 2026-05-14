@@ -36,13 +36,18 @@
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
 
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[2000] flex flex-col items-center justify-center text-center px-4 transition-opacity duration-300">
+        <div class="text-6xl animate-bounce mb-4">📍</div>
+        <h2 class="text-3xl font-black text-white mb-2">טוען נתונים...</h2>
+        <p class="text-slate-300 font-medium text-sm">מכין את מפת היישובים של ישראל</p>
+    </div>
+
     <header class="w-full max-w-md space-y-3 mb-3 pt-2">
         <div class="flex justify-between items-end px-1">
             <div>
                 <h1 class="text-3xl font-black text-slate-900 leading-none">משחק היישובים</h1>
                 <p class="text-primary font-bold text-sm">מאת איל פידל</p>
             </div>
-            
             <div class="flex items-center gap-2">
                 <button onclick="openTutorial()" class="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-primary transition-colors shadow-sm flex items-center justify-center text-lg leading-none active:scale-95" aria-label="איך משחקים?">❓</button>
                 <div class="text-left mr-1">
@@ -164,30 +169,32 @@
         </div>
     </div>
 
-    <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-start p-4 z-[999] hidden overflow-y-auto">
-        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl mt-8 mb-8 flex-shrink-0">
-            <button onclick="document.getElementById('modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors" title="סגור חלון וצפה בלוח">X</button>
+    <div id="modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 z-[999] hidden overflow-y-auto">
+        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center shadow-2xl flex-shrink-0 min-h-[85vh] flex flex-col relative my-auto">
+            <button onclick="document.getElementById('modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors z-50" title="סגור חלון וצפה בלוח">X</button>
             
-            <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic">שיא חדש!</div>
+            <div id="new-record-badge" class="absolute -top-4 -right-4 bg-accent text-white font-black text-xs px-4 py-2 rounded-full shadow-lg rotate-12 hidden italic z-50">שיא חדש!</div>
             
-            <div id="perfect-match-ribbon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap">
+            <div id="perfect-match-ribbon" class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-white font-black text-sm px-6 py-1.5 rounded-full shadow-lg hidden whitespace-nowrap z-50">
                 🏆 שידוך מושלם!
             </div>
             
-            <h2 class="text-3xl font-black text-slate-900 leading-tight mt-2">כל הכבוד!</h2>
-            
-            <div class="py-4 bg-slate-50 rounded-3xl border border-slate-100">
-                <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span>
-                <div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div>
+            <div class="flex-grow flex flex-col space-y-4 pt-2">
+                <h2 class="text-3xl font-black text-slate-900 leading-tight">כל הכבוד!</h2>
+                
+                <div class="py-3 bg-slate-50 rounded-3xl border border-slate-100 shrink-0">
+                    <span class="text-slate-400 text-xs font-bold uppercase tracking-widest">תוצאה סופית</span>
+                    <div id="final-score" class="text-6xl font-black text-primary tracking-tighter">0</div>
+                </div>
+
+                <div class="w-full flex-grow min-h-[160px] bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative shrink-0">
+                    <div id="end-map" class="w-full h-full"></div>
+                </div>
+
+                <div id="round-history" class="text-right text-[11px] bg-slate-50 p-3 rounded-2xl space-y-2 overflow-y-auto max-h-[25vh] border border-slate-100 shadow-inner shrink-0"></div>
             </div>
 
-            <div class="w-full h-48 sm:h-64 bg-slate-200 rounded-2xl overflow-hidden border border-slate-200 relative">
-                <div id="end-map" class="w-full h-full"></div>
-            </div>
-
-            <div id="round-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-[30vh] border border-slate-100 shadow-inner"></div>
-
-            <div class="space-y-3 pt-2">
+            <div class="space-y-3 pt-4 mt-auto shrink-0 border-t border-slate-100">
                 <button onclick="shareResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">שתף תוצאה 📤</button>
                 
                 <button onclick="showOptimalGame()" class="w-full bg-slate-100 text-slate-700 font-bold py-3 rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 scale-tap">
@@ -199,22 +206,22 @@
         </div>
     </div>
 
-    <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-start p-4 z-[1000] hidden overflow-y-auto">
-        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl mt-8 mb-8 flex-shrink-0">
-            <button onclick="document.getElementById('optimal-modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors">X</button>
+    <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex flex-col items-center justify-center p-4 z-[1000] hidden overflow-y-auto">
+        <div class="bg-white rounded-[40px] w-full max-w-sm p-6 text-center space-y-5 relative shadow-2xl my-auto flex-shrink-0 min-h-[70vh] flex flex-col">
+            <button onclick="document.getElementById('optimal-modal').classList.add('hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
             
             <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
             <p class="text-xs text-slate-500 font-medium px-2">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
             
-            <div class="py-3 bg-success/10 rounded-3xl border border-success/20">
+            <div class="py-3 bg-success/10 rounded-3xl border border-success/20 shrink-0">
                 <span class="text-success text-[10px] font-bold uppercase tracking-widest">ציון אופטימלי אפשרי</span>
                 <div id="optimal-score" class="text-5xl font-black text-success tracking-tighter">0</div>
             </div>
 
-            <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto max-h-[40vh] border border-slate-100 shadow-inner">
+            <div id="optimal-history" class="text-right text-[11px] bg-slate-50 p-4 rounded-2xl space-y-2 overflow-y-auto flex-grow border border-slate-100 shadow-inner">
             </div>
 
-            <div class="pt-2">
+            <div class="pt-4 mt-auto shrink-0 border-t border-slate-100">
                 <button onclick="shareOptimalResults()" class="w-full bg-slate-900 text-white font-bold py-3.5 rounded-2xl shadow-xl flex items-center justify-center gap-2 scale-tap">
                     שתף השוואה 📊
                 </button>
@@ -224,16 +231,15 @@
     
     <script>
         /* =====================================================================
-           נתוני ה-JSON שלכם 
+           משתנים לנתוני היישובים
            ===================================================================== */
-        
-        // הדבק את ה-JSON של מצב קל ממש מתחת לשורה זו:
+        let easyData = [];
+        let hardData = [];
 
         /* =====================================================================
            הגדרות בסיס 
            ===================================================================== */
         const MAX_PENALTY = 600;
-
         const safeFormat = (val, formatter) => {
             if (val === undefined || val === null || val === '') return 'חסר נתון';
             try { return formatter(val); } catch(e) { return val; }
@@ -264,7 +270,7 @@
         /* =====================================================================
            ניהול מצבים גלובלי
            ===================================================================== */
-        let diff = 'easy'; 
+        let diff = 'easy';
         let mode = 'draw'; 
 
         let currentDataset = [];
@@ -287,23 +293,67 @@
         window.onload = () => {
             checkTutorial();
             updateInlineButtonsUI();
-            initGame();
+            loadData(); // טעינת נתונים במקום אתחול ישיר
         };
+
+        /* =====================================================================
+           פונקציה למשיכת הנתונים מקבצי JSON
+           ===================================================================== */
+        async function loadData() {
+            try {
+                // משתמשים ב-Promise.all כדי למשוך את שניהם במקביל מאותה תיקייה
+                const [easyRes, hardRes] = await Promise.all([
+                    fetch('easy.json'),
+                    fetch('hard.json')
+                ]);
+
+                if (!easyRes.ok || !hardRes.ok) {
+                    throw new Error('אחד מקבצי ה-JSON או שניהם לא נמצאו');
+                }
+
+                easyData = await easyRes.json();
+                hardData = await hardRes.json();
+
+                // הסרת מסך הטעינה החוסם
+                const overlay = document.getElementById('loading-overlay');
+                overlay.style.opacity = '0';
+                setTimeout(() => { overlay.classList.add('hidden'); }, 300);
+
+                // מתחילים את המשחק רק אחרי שהנתונים זמינים
+                initGame();
+            } catch (error) {
+                console.error("שגיאה בטעינת הנתונים:", error);
+                const overlay = document.getElementById('loading-overlay');
+                overlay.innerHTML = `
+                    <div class="text-6xl mb-4">⚠️</div>
+                    <h2 class="text-2xl font-black text-white mb-2">שגיאה בטעינת הנתונים</h2>
+                    <p class="text-slate-300 font-medium text-sm text-center px-4">
+                        לא ניתן לטעון את קבצי ה-JSON.<br>
+                        אנא ודא ש- easy.json ו- hard.json נמצאים בשרת.
+                    </p>
+                `;
+            }
+        }
 
         function checkTutorial() {
             if (!localStorage.getItem('israelGameTutorialSeenV3')) { openTutorial(); }
         }
         function openTutorial() { document.getElementById('tutorial-modal').classList.remove('hidden'); }
         function closeTutorial() { 
-            document.getElementById('tutorial-modal').classList.add('hidden'); 
+            document.getElementById('tutorial-modal').classList.add('hidden');
             localStorage.setItem('israelGameTutorialSeenV3', 'true'); 
+        }
+
+        // הפונקציה שהייתה חסרה ופותחת את חלון הסיכום
+        function openEndGameModal() {
+            document.getElementById('modal').classList.remove('hidden');
         }
 
         /* =====================================================================
            שליטה מהירה במצבים (Inline)
            ===================================================================== */
         function setDiff(newDiff) {
-            if (diff === newDiff) return; // לא השתנה
+            if (diff === newDiff) return;
             if (currentDrawIndex > 0 || Object.keys(placeAssignments).length > 0) {
                 if (!confirm("החלפת רמת קושי תתחיל משחק חדש. להמשיך?")) return;
             }
@@ -313,7 +363,7 @@
         }
 
         function setMode(newMode) {
-            if (mode === newMode) return; // לא השתנה
+            if (mode === newMode) return;
             if (currentDrawIndex > 0 || Object.keys(placeAssignments).length > 0) {
                 if (!confirm("החלפת סגנון תתחיל משחק חדש. להמשיך?")) return;
             }
@@ -361,6 +411,9 @@
            אתחול משחק
            ===================================================================== */
         function initGame() {
+            // אם הנתונים עוד לא נטענו, אין מה לאתחל
+            if (easyData.length === 0 && hardData.length === 0) return;
+
             document.getElementById('modal').classList.add('hidden');
             document.getElementById('draw-screen').classList.add('hidden');
             document.getElementById('place-screen').classList.add('hidden');
@@ -374,17 +427,17 @@
             usedDrawCats.clear();
             drawMapSettlement = null;
             if(isDrawMapOpen) toggleDrawMap();
-
             placeAssignments = {};
             selectedPlaceItem = null;
 
             loadBestScore();
 
             currentDataset = diff === 'easy' ? easyData : hardData;
+            
             if (!currentDataset || !Array.isArray(currentDataset) || currentDataset.length < 8) {
                 if (hardData && Array.isArray(hardData) && hardData.length >= 8) { currentDataset = hardData; diff = 'hard'; updateInlineButtonsUI(); }
                 else if (easyData && Array.isArray(easyData) && easyData.length >= 8) { currentDataset = easyData; diff = 'easy'; updateInlineButtonsUI(); }
-                else { alert("שגיאה: הנתונים לא הודבקו כראוי או חסרים (נדרשים לפחות 8 יישובים)."); return; }
+                else { alert("שגיאה: הנתונים חסרים (נדרשים לפחות 8 יישובים)."); return; }
                 loadBestScore();
             }
 
@@ -412,7 +465,6 @@
             const dotsContainer = document.getElementById('draw-dots');
             dotsContainer.innerHTML = '';
             for (let i = 0; i < 8; i++) dotsContainer.innerHTML += `<div id="draw-dot-${i}" class="w-3 h-3 rounded-full bg-slate-200 shadow-inner transition-all"></div>`;
-            
             const grid = document.getElementById('draw-categories');
             grid.innerHTML = '';
             categories.forEach(cat => {
@@ -435,7 +487,7 @@
                     mapBtn.classList.remove('hidden');
                     mapBtn.innerHTML = `איפה זה <b>${drawMapSettlement["שם יישוב"]}</b>? 🗺️`;
                 } else mapBtn.classList.add('hidden');
-                if(isDrawMapOpen) toggleDrawMap(); 
+                if(isDrawMapOpen) toggleDrawMap();
             } else {
                 prevPanel.classList.add('hidden');
             }
@@ -475,22 +527,18 @@
                 }
             });
 
-            // פיצול בין דירוג אמיתי לקנס הנקודות
             let actualRank = parseInt(String(currentSettlement[catId] || "1221").replace(/,/g, '')) || 1221;
             let penalty = Math.min(actualRank, MAX_PENALTY);
             totalScore += penalty;
 
-            // יצירת הכיתוב
             let rankText = actualRank > MAX_PENALTY ? `מקום ${actualRank} (${MAX_PENALTY} נק')` : `מקום ${actualRank}`;
 
             const dot = document.getElementById(`draw-dot-${currentDrawIndex}`);
             dot.className = `w-3 h-3 rounded-full shadow-md scale-110 ${actualRank <= 150 ? 'bg-success' : actualRank <= 400 ? 'bg-warning' : 'bg-danger'}`;
-
             const btn = document.getElementById(`draw-cat-${catId}`);
             btn.disabled = true;
             const dataConfig = categoryDataMap[catId];
             const formattedVal = dataConfig.format(currentSettlement[dataConfig.field]);
-            
             btn.innerHTML = `
                 <div class="flex items-center gap-1 mb-1"><span class="text-sm">${catObj.icon}</span><span class="text-[8px] font-bold text-slate-500 uppercase">${catObj.label}</span></div>
                 <span class="font-black text-slate-800 text-xs text-center">${currentSettlement["שם יישוב"]}</span>
@@ -566,7 +614,6 @@
                     `;
                 }
             });
-
             if (Object.keys(placeAssignments).length === 8) {
                 bank.innerHTML = `<span class="text-success font-bold text-sm">כל היישובים שובצו! ✔️</span>`;
                 document.getElementById('place-submit-btn').classList.remove('hidden');
@@ -629,6 +676,7 @@
                 
                 let actualRank = parseInt(String(s[cat.id] || "1221").replace(/,/g, '')) || 1221;
                 let penalty = Math.min(actualRank, MAX_PENALTY);
+                
                 totalScore += penalty;
                 
                 let rankText = actualRank > MAX_PENALTY ? `מקום ${actualRank} (${MAX_PENALTY} נק')` : `מקום ${actualRank}`;
@@ -662,7 +710,6 @@
         /* =====================================================================
            מסך סיום ומפת סיכום (End Game)
            ===================================================================== */
-        // משתנים גלובליים לשמירת נתוני האופטימום
         let globalOptimalScore = 0;
         let globalOptimalHtml = "";
 
@@ -680,9 +727,7 @@
                 recordBadge.classList.add('hidden');
             }
 
-            // חישוב המשחק האופטימלי ברקע כדי לדעת אם להציג את ריבון "השידוך המושלם"
             calculateOptimalGameData();
-            
             const ribbon = document.getElementById('perfect-match-ribbon');
             if (totalScore === globalOptimalScore) {
                 ribbon.classList.remove('hidden');
@@ -696,17 +741,13 @@
                     <span class="font-black text-primary">${h.rankText}</span>
                 </div>
             `).join('');
-
-            const mapWrapper = document.getElementById('end-map').parentElement;
-            mapWrapper.classList.remove('h-48');
-            mapWrapper.classList.add('h-72');
-
+            
             setTimeout(() => {
                 const mapContainer = document.getElementById('end-map');
                 if(mapContainer._leaflet_id) {
                     mapContainer.outerHTML = '<div id="end-map" class="w-full h-full"></div>';
                 }
-                
+               
                 endMapObj = L.map('end-map', { zoomControl: true, dragging: true, scrollWheelZoom: true });
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(endMapObj);
                 
@@ -742,24 +783,21 @@
                             </div>
                             ${allDataHtml}
                         </div>`;
-                        
                         marker.bindPopup(popupContent);
                         bounds.push([lat, lon]);
                         endMarkers.push(marker);
                     } else {
-                        endMarkers.push(null); 
+                        endMarkers.push(null);
                     }
                 });
 
                 endMapObj.invalidateSize();
-
                 if(bounds.length > 0) {
                     endMapObj.fitBounds(bounds, { padding: [20, 20], maxZoom: 12 });
                 } else {
                     endMapObj.setView([31.5, 34.8], 7);
                 }
             }, 300);
-
             confetti({ particleCount: 200, spread: 90, origin: { y: 0.6 } });
         }
 
@@ -793,7 +831,7 @@
             }
 
             function solve(settlementIdx, currentScore, currentAssignment, usedCategories) {
-                if (currentScore >= minScore) return; 
+                if (currentScore >= minScore) return;
                 if (settlementIdx === n) {
                     minScore = currentScore;
                     bestAssignment = [...currentAssignment];
@@ -811,7 +849,6 @@
             }
 
             solve(0, 0, [], Array(n).fill(false));
-            
             globalOptimalScore = minScore;
             
             globalOptimalHtml = bestAssignment.map((catIdx, sIdx) => {
@@ -819,6 +856,7 @@
                 const cat = categories[catIdx];
                 let actualRank = parseInt(String(s[cat.id] || "1221").replace(/,/g, '')) || 1221;
                 let rankText = actualRank > MAX_PENALTY ? `מקום ${actualRank} (${MAX_PENALTY} נק')` : `מקום ${actualRank}`;
+ 
                 const userChoice = gameHistory.find(h => h.name === s["שם יישוב"]);
                 let comparisonHtml = "";
                 
@@ -855,16 +893,13 @@
                 let emoji = h.actualRank <= 150 ? '🟩' : h.actualRank <= 400 ? '🟨' : '🟥';
                 return `${emoji} ${h.name} (${h.catLabel}) - מקום ${h.actualRank}`;
             }).join('\n');
-
             let perfectMatchText = (totalScore === globalOptimalScore) ? `\n🏆 השגתי את השידוך המושלם!\n` : `\n`;
-
             const text = `משחק היישובים V3 📍\n` +
                          `מצב: ${diff === 'easy' ? 'קל' : 'קשה'} | ${mode === 'draw' ? 'הגרלה' : 'הצבה'}\n` +
                          `תוצאה סופית: ${totalScore} נק'\n` +
                          perfectMatchText +
                          `\n${details}\n\n` +
-                         `${window.location.href}`; 
-            
+                         `${window.location.href}`;
             if (navigator.share) { navigator.share({ text }); } 
             else { navigator.clipboard.writeText(text); alert("הטקסט הועתק ללוח!"); }
         }
@@ -881,7 +916,6 @@
                          `${comparisonText}\n\n` +
                          `נסו בעצמכם:\n` +
                          `${window.location.href}`;
-
             if (navigator.share) { navigator.share({ text }); } 
             else { navigator.clipboard.writeText(text); alert("הטקסט הועתק ללוח!"); }
         }
