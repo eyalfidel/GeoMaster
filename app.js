@@ -2,6 +2,27 @@ let easyData = [];
 let hardData = [];
 const MAX_PENALTY = 600;
 
+// פונקציות תצוגה עזר
+function showEl(id, displayType = 'flex') {
+    const el = document.getElementById(id);
+    if(el) { el.classList.remove('hidden'); el.classList.add(displayType); }
+}
+function hideEl(id, currentDisplay = 'flex') {
+    const el = document.getElementById(id);
+    if(el) { el.classList.remove(currentDisplay); el.classList.add('hidden'); }
+}
+
+// מאזין סגירת מודאלים בלחיצה בחוץ
+window.onclick = function(event) {
+    const modals = ['tutorial-modal', 'modal', 'optimal-modal'];
+    modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (event.target === modal) {
+            hideEl(id, 'flex');
+        }
+    });
+}
+
 const safeFormat = (val, formatter) => {
     if (val === undefined || val === null || val === '') return 'חסר נתון';
     try { return formatter(val); } catch(e) { return val; }
@@ -35,17 +56,6 @@ let endMapObj = null, endMarkers = [], currentDrawIndex = 0;
 let usedDrawCats = new Set(), drawMapSettlement = null, drawMap = null, drawMarker = null, isDrawMapOpen = false;
 let placeAssignments = {}, selectedPlaceItem = null;
 
-// פונקציות תצוגה פשוטות
-function showEl(id, displayType = 'block') {
-    const el = document.getElementById(id);
-    if(el) { el.classList.remove('hidden'); el.style.display = displayType; }
-}
-function hideEl(id) {
-    const el = document.getElementById(id);
-    if(el) { el.classList.add('hidden'); el.style.display = 'none'; }
-}
-
-// תהליך הטעינה - מיד כשהדף עולה
 document.addEventListener("DOMContentLoaded", async () => {
     try {
         const [easyRes, hardRes] = await Promise.all([
@@ -56,11 +66,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         easyData = await easyRes.json();
         hardData = await hardRes.json();
         
-        // מחיקה פיזית של מסך הטעינה מה-HTML כדי שלא יחסום שום דבר
         const loader = document.getElementById('startup-loader');
         if (loader) loader.remove();
         
-        // הצגת המשחק
         document.getElementById('app-content').style.display = 'block';
         
         checkTutorial();
@@ -78,9 +86,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 function checkTutorial() { if (!localStorage.getItem('israelGameTutorialSeenV3')) openTutorial(); }
 function openTutorial() { showEl('tutorial-modal', 'flex'); }
-function closeTutorial() { hideEl('tutorial-modal'); localStorage.setItem('israelGameTutorialSeenV3', 'true'); }
+function closeTutorial() { hideEl('tutorial-modal', 'flex'); localStorage.setItem('israelGameTutorialSeenV3', 'true'); }
 function openEndGameModal() { showEl('modal', 'flex'); }
-function closeEndGameModal() { hideEl('modal'); }
+function closeEndGameModal() { hideEl('modal', 'flex'); }
 
 function setDiff(newDiff) {
     if (diff === newDiff) return;
@@ -110,7 +118,7 @@ function loadBestScore() {
 }
 
 function initGame() {
-    closeEndGameModal(); hideEl('draw-screen'); hideEl('place-screen'); hideEl('draw-end-controls'); hideEl('place-end-controls'); showEl('draw-settlement-container', 'flex');
+    closeEndGameModal(); hideEl('draw-screen', 'flex'); hideEl('place-screen', 'flex'); hideEl('draw-end-controls', 'flex'); hideEl('place-end-controls', 'flex'); showEl('draw-settlement-container', 'flex');
     totalScore = 0; gameHistory = []; currentDrawIndex = 0; usedDrawCats.clear(); drawMapSettlement = null;
     if(isDrawMapOpen) toggleDrawMap();
     placeAssignments = {}; selectedPlaceItem = null;
@@ -143,11 +151,11 @@ function nextDrawRound() {
     if (drawMapSettlement) {
         showEl('draw-prev-panel', 'flex');
         const mapBtn = document.getElementById('draw-map-btn');
-        if (drawMapSettlement['lat'] || drawMapSettlement['קו רוחב']) { showEl('draw-map-btn', 'inline-block'); mapBtn.innerHTML = `איפה זה <b>${drawMapSettlement["שם יישוב"]}</b>? 🗺️`; } else hideEl('draw-map-btn');
+        if (drawMapSettlement['lat'] || drawMapSettlement['קו רוחב']) { showEl('draw-map-btn', 'inline-block'); mapBtn.innerHTML = `איפה זה <b>${drawMapSettlement["שם יישוב"]}</b>? 🗺️`; } else hideEl('draw-map-btn', 'inline-block');
         if(isDrawMapOpen) toggleDrawMap();
-    } else hideEl('draw-prev-panel');
+    } else hideEl('draw-prev-panel', 'flex');
 
-    if (currentDrawIndex >= 8) { hideEl('draw-settlement-container'); showEl('draw-end-controls', 'flex'); showEndGame(); return; }
+    if (currentDrawIndex >= 8) { hideEl('draw-settlement-container', 'flex'); showEl('draw-end-controls', 'flex'); showEndGame(); return; }
 
     document.getElementById('round-display').innerText = `${currentDrawIndex + 1} / 8`;
     const nameEl = document.getElementById('draw-settlement-name');
@@ -211,7 +219,7 @@ function toggleDrawMap() {
 }
 
 /* --- Place Mode --- */
-function initPlaceMode() { renderPlaceBank(); renderPlaceCategories(); hideEl('place-submit-btn'); }
+function initPlaceMode() { renderPlaceBank(); renderPlaceCategories(); hideEl('place-submit-btn', 'block'); }
 function renderPlaceBank() {
     const bank = document.getElementById('place-bank'); bank.innerHTML = '';
     sessionSettlements.forEach((s, idx) => {
@@ -220,7 +228,7 @@ function renderPlaceBank() {
             bank.innerHTML += `<button onclick="selectForPlace(${idx})" class="px-3 py-1.5 rounded-full text-sm font-bold bg-slate-100 text-slate-700 transition-all ${isSelected ? 'selected-bank-item' : 'hover:bg-slate-200'}">${s["שם יישוב"]}</button>`;
         }
     });
-    Object.keys(placeAssignments).length === 8 ? (bank.innerHTML = `<span class="text-success font-bold text-sm">כל היישובים שובצו! ✔️</span>`, showEl('place-submit-btn', 'block')) : hideEl('place-submit-btn');
+    Object.keys(placeAssignments).length === 8 ? (bank.innerHTML = `<span class="text-success font-bold text-sm">כל היישובים שובצו! ✔️</span>`, showEl('place-submit-btn', 'block')) : hideEl('place-submit-btn', 'block');
 }
 function selectForPlace(idx) { selectedPlaceItem = sessionSettlements[idx]; renderPlaceBank(); }
 function renderPlaceCategories() {
@@ -243,16 +251,16 @@ function submitPlacement() {
         const btn = document.getElementById(`place-cat-btn-${cat.id}`);
         if(btn) { btn.onclick = null; btn.className = 'bg-white p-3 rounded-2xl flex flex-col items-center justify-center border-2 border-transparent shadow-sm min-h-[80px]'; btn.innerHTML = `<div class="flex items-center gap-1 mb-1"><span class="text-sm">${cat.icon}</span><span class="text-[8px] font-bold text-slate-500 uppercase">${cat.label}</span></div><span class="font-black text-slate-800 text-xs text-center">${s["שם יישוב"]}</span><span class="font-bold text-slate-500 text-[9px] mt-0.5">${categoryDataMap[cat.id].format(s[categoryDataMap[cat.id].field])}</span><span class="text-primary font-black text-[10px] mt-1 bg-primary/10 px-2 py-0.5 rounded-full" dir="rtl">${rankText}</span>`; }
     });
-    hideEl('place-submit-btn'); hideEl('place-bank-container'); showEl('place-end-controls', 'flex'); showEndGame();
+    hideEl('place-submit-btn', 'block'); hideEl('place-bank-container', 'block'); showEl('place-end-controls', 'flex'); showEndGame();
 }
 
 /* --- End Game & Optimal --- */
 let globalOptimalScore = 0, globalOptimalHtml = "";
 function showEndGame() {
     openEndGameModal(); document.getElementById('final-score').innerText = totalScore.toLocaleString();
-    if (totalScore < bestScore) { bestScore = totalScore; localStorage.setItem(getBestScoreKey(), totalScore); document.getElementById('best-score-display').innerText = totalScore.toLocaleString(); showEl('new-record-badge', 'block'); } else hideEl('new-record-badge');
+    if (totalScore < bestScore) { bestScore = totalScore; localStorage.setItem(getBestScoreKey(), totalScore); document.getElementById('best-score-display').innerText = totalScore.toLocaleString(); showEl('new-record-badge', 'block'); } else hideEl('new-record-badge', 'block');
     calculateOptimalGameData();
-    totalScore === globalOptimalScore ? showEl('perfect-match-ribbon', 'block') : hideEl('perfect-match-ribbon');
+    totalScore === globalOptimalScore ? showEl('perfect-match-ribbon', 'block') : hideEl('perfect-match-ribbon', 'block');
     document.getElementById('round-history').innerHTML = gameHistory.map((h, i) => `<div class="flex justify-between border-b border-slate-200 pb-1 italic cursor-pointer hover:bg-slate-200 transition-colors px-2 py-1 rounded-md" onclick="focusEndMapMarker(${i})"><span>${h.icon} <b>${h.name}</b> (${h.catLabel})</span><span class="font-black text-primary">${h.rankText}</span></div>`).join('');
     
     setTimeout(() => {
@@ -307,11 +315,13 @@ function calculateOptimalGameData() {
     }).join('');
 }
 function showOptimalGame() { document.getElementById('optimal-score').innerText = globalOptimalScore.toLocaleString(); document.getElementById('optimal-history').innerHTML = globalOptimalHtml; showEl('optimal-modal', 'flex'); }
+
 function shareResults() {
     let details = gameHistory.map(h => `${h.actualRank <= 150 ? '🟩' : h.actualRank <= 400 ? '🟨' : '🟥'} ${h.name} (${h.catLabel}) - מקום ${h.actualRank}`).join('\n');
     const text = `משחק היישובים V3 📍\nמצב: ${diff === 'easy' ? 'קל' : 'קשה'} | ${mode === 'draw' ? 'הגרלה' : 'הצבה'}\nתוצאה סופית: ${totalScore} נק'\n${totalScore === globalOptimalScore ? `\n🏆 השגתי את השידוך המושלם!\n` : `\n`}\n${details}\n\n${window.location.href}`;
     navigator.share ? navigator.share({ text }) : (navigator.clipboard.writeText(text), alert("הטקסט הועתק ללוח!"));
 }
+
 function shareOptimalResults() {
     const diffScore = totalScore - globalOptimalScore;
     const text = `משחק היישובים 📍 - אתגר השידוך המושלם\n\nציון שלי: ${totalScore}\nציון אופטימלי: ${globalOptimalScore}\n${diffScore === 0 ? "הגעתי לשידוך המושלם בדיוק! 🏆" : `הייתי במרחק של ${diffScore} נקודות מהשידוך המושלם! 😅`}\n\nנסו בעצמכם:\n${window.location.href}`;
