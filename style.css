@@ -1,0 +1,38 @@
+body { 
+    margin: 0; padding: 0; 
+    background-color: #f8fafc; 
+    font-family: 'Heebo', sans-serif !important; 
+    overflow-x: hidden; 
+    -webkit-tap-highlight-color: transparent; 
+}
+
+#startup-loader {
+    position: fixed; inset: 0; background-color: #0f172a; z-index: 999999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: white; text-align: center; direction: rtl;
+}
+
+.loader-spinner {
+    width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2);
+    border-top-color: #0891b2; border-radius: 50%;
+    animation: spin 1s linear infinite; margin-bottom: 20px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+#app-content { display: none; }
+
+button { touch-action: manipulation; cursor: pointer; }
+.scale-tap:active { transform: scale(0.96); }
+
+/* אכיפת הסימון במצב הצבה מול Tailwind */
+.selected-bank-item { 
+    outline: 3px solid #0891b2 !important; 
+    background-color: #e0f2fe !important; 
+    color: #0369a1 !important;
+    transform: scale(1.05); 
+}
+
+.slot-filled { background-color: #f0fdf4; border-color: #86efac; }
+.leaflet-control-attribution { font-size: 8px !important; }
+.leaflet-control-zoom { border: none !important; box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; }
