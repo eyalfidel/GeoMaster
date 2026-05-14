@@ -6,25 +6,25 @@
     <title>משחק היישובים של ישראל | V3.3</title>
     <meta name="description" content="שחקו במשחק הדירוגים הגאוגרפי של ישראל. שני מצבי משחק, מפות וסיכומים!">
     
-    <!-- מסך טעינה קשיח וטהור ב-CSS למניעת FOUC במובייל -->
+    <!-- מסך טעינה טהור שאינו תלוי בכלום ומונע הבהובים במובייל -->
     <style>
         body { margin: 0; padding: 0; background-color: #f8fafc; font-family: sans-serif; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
-        #hard-loader {
+        
+        #pure-loader {
             position: fixed; inset: 0; background-color: #0f172a; z-index: 999999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: white; text-align: center; direction: rtl;
+            color: white; text-align: center; direction: rtl; transition: opacity 0.3s ease;
         }
-        .spinner {
+        
+        .loader-spinner {
             width: 50px; height: 50px; border: 5px solid rgba(255,255,255,0.1);
             border-top: 5px solid #0891b2; border-radius: 50%;
             animation: spin 1s linear infinite; margin-bottom: 20px;
         }
+        
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        /* כל המשחק מוסתר לחלוטין עד שהכל מוכן */
-        #game-app { display: none; }
-        
-        /* אופטימיזציה לטאץ' */
+        /* אופטימיזציה לטאץ' והגדרות בסיס */
         button { touch-action: manipulation; cursor: pointer; }
         .scale-tap:active { transform: scale(0.96); }
         .selected-bank-item { outline: 3px solid #0891b2; background-color: #e0f2fe; transform: scale(1.05); }
@@ -34,6 +34,8 @@
     </style>
 
     <link rel="icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png">
+    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4cd.png">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -54,16 +56,16 @@
 </head>
 <body>
 
-    <!-- מסך הטעינה הקשיח -->
-    <div id="hard-loader">
+    <!-- מסך הטעינה החסין -->
+    <div id="pure-loader">
         <div style="font-size: 64px; margin-bottom: 10px;">📍</div>
-        <div class="spinner"></div>
+        <div class="loader-spinner"></div>
         <h2 style="font-size: 24px; font-weight: 900; margin: 0 0 10px 0;">טוען נתונים...</h2>
-        <p style="color: #94a3b8; font-size: 14px; margin: 0;" id="loader-text">מתחבר למפות היישובים</p>
+        <p style="color: #94a3b8; font-size: 14px; margin: 0;" id="loader-text">מתחבר למפות וטוען עיצוב</p>
     </div>
 
-    <!-- מעטפת המשחק שמוסתרת עד ש-Tailwind מוכן -->
-    <div id="game-app" class="min-h-screen flex-col items-center p-4 w-full max-w-md mx-auto relative">
+    <!-- מעטפת המשחק - מוסתרת לחלוטין עד שמוודאים טעינה מלאה -->
+    <div id="game-app" style="visibility: hidden; opacity: 0; transition: opacity 0.5s ease;" class="min-h-screen flex-col items-center p-4 w-full max-w-md mx-auto relative flex">
 
         <header class="w-full space-y-3 mb-3 pt-2">
             <div class="flex justify-between items-end px-1">
@@ -116,7 +118,7 @@
                 <h1 id="draw-settlement-name" class="text-5xl font-black text-slate-900 mt-3 tracking-tight">...</h1>
             </div>
 
-            <div id="draw-prev-panel" class="w-full mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 flex flex-col items-center gap-2 hidden transition-all">
+            <div id="draw-prev-panel" class="w-full mb-2 bg-slate-100/70 border border-slate-200 rounded-2xl p-3 flex-col items-center gap-2 hidden transition-all">
                 <div id="draw-prev-feedback" class="text-xs text-slate-700 text-center font-medium leading-tight"></div>
                 <button id="draw-map-btn" class="text-[11px] font-bold border border-slate-300 text-slate-600 bg-white px-4 py-1.5 rounded-full shadow-sm" onclick="toggleDrawMap()">מפה 🗺️</button>
                 <div id="draw-map-wrapper" class="w-full rounded-xl overflow-hidden transition-all duration-300 h-0 opacity-0 pointer-events-none relative">
@@ -126,7 +128,7 @@
 
             <div id="draw-categories" class="grid grid-cols-2 gap-3 w-full"></div>
             
-            <div id="draw-end-controls" class="w-full flex gap-3 mt-6 mb-4 hidden">
+            <div id="draw-end-controls" class="w-full gap-3 mt-6 mb-4 hidden">
                 <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
                 <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
             </div>
@@ -150,7 +152,7 @@
                 בדוק תוצאות! 🎯
             </button>
 
-            <div id="place-end-controls" class="w-full flex gap-3 mt-2 mb-4 hidden">
+            <div id="place-end-controls" class="w-full gap-3 mt-2 mb-4 hidden">
                 <button onclick="openEndGameModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-2xl shadow-sm hover:bg-slate-300 scale-tap">📊 סיכום</button>
                 <button onclick="initGame()" class="flex-1 bg-primary text-white font-bold py-3 rounded-2xl shadow-sm hover:bg-cyan-700 scale-tap">משחק חדש 🔄</button>
             </div>
@@ -158,8 +160,7 @@
 
     </div>
 
-    <!-- Modals (עברו החוצה מהקונטיינר הראשי למניעת באגים של z-index) -->
-    
+    <!-- Modals -->
     <div id="tutorial-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm items-center justify-center p-4 z-[1000] hidden">
         <div class="bg-white rounded-[32px] w-full max-w-sm mx-auto p-6 relative shadow-2xl">
             <button onclick="closeTutorial()" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 hover:text-slate-800 transition-colors">X</button>
@@ -235,7 +236,7 @@
 
     <div id="optimal-modal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex-col items-center justify-center p-4 z-[1000] hidden overflow-y-auto">
         <div class="bg-white rounded-[40px] w-full max-w-sm mx-auto p-6 text-center space-y-5 relative shadow-2xl my-auto flex-shrink-0 min-h-[70vh] flex flex-col">
-            <button onclick="document.getElementById('optimal-modal').classList.replace('flex', 'hidden')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
+            <button onclick="hideEl('optimal-modal')" class="absolute top-4 left-4 w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 font-bold hover:bg-slate-200 transition-colors z-50">X</button>
             
             <h2 class="text-2xl font-black text-slate-900 leading-tight mt-2">השידוך המושלם 💡</h2>
             <p class="text-xs text-slate-500 font-medium px-2">אם היית יודע מראש אילו 8 יישובים תקבל, זו התוצאה הטובה ביותר שיכולת להרכיב איתם:</p>
@@ -256,6 +257,18 @@
     </div>
     
     <script>
+        /* =====================================================================
+           פונקציות עזר קריטיות לניהול תצוגה
+           ===================================================================== */
+        function showEl(id) {
+            const el = document.getElementById(id);
+            if(el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+        }
+        function hideEl(id) {
+            const el = document.getElementById(id);
+            if(el) { el.classList.remove('flex'); el.classList.add('hidden'); }
+        }
+
         /* =====================================================================
            משתנים לנתוני היישובים
            ===================================================================== */
@@ -317,55 +330,79 @@
         let selectedPlaceItem = null;
 
         /* =====================================================================
-           קריטי למובייל: משיכת נתונים קורית אך ורק אחרי שכל הקבצים החיצוניים נטענו
+           מערכת טעינה מתקדמת (מחכה במקביל ל-JSON ולעיצוב של Tailwind)
            ===================================================================== */
-        window.addEventListener('load', async () => {
-            try {
-                document.getElementById('loader-text').innerText = 'קורא קבצי נתונים...';
-                const [easyRes, hardRes] = await Promise.all([
-                    fetch('easy.json'),
-                    fetch('hard.json')
-                ]);
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. בקשת הנתונים
+            const dataPromise = Promise.all([
+                fetch('easy.json').then(res => res.json()),
+                fetch('hard.json').then(res => res.json())
+            ]);
 
-                if (!easyRes.ok || !hardRes.ok) throw new Error('אחד מקבצי ה-JSON לא נמצא');
-
-                easyData = await easyRes.json();
-                hardData = await hardRes.json();
-
-                // הסרה קשיחה של המסך טעינה והצגת המשחק (רק אחרי שה-JSON וה-CSS מוכנים)
-                const loader = document.getElementById('hard-loader');
-                loader.style.display = 'none';
+            // 2. בדיקה אקטיבית מתי Tailwind מסיים לטעון את העיצוב
+            const tailwindPromise = new Promise(resolve => {
+                const twCheck = document.createElement('div');
+                twCheck.className = 'opacity-0'; // קלאס שרק Tailwind מכיר
+                twCheck.style.position = 'absolute';
+                document.body.appendChild(twCheck);
                 
-                const app = document.getElementById('game-app');
-                app.style.display = 'flex'; // מחזיר את הקונטיינר לחיים
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    attempts++;
+                    // ברגע שהשקיפות יורדת ל-0, אנחנו יודעים בוודאות ש-Tailwind סיים לקמפל!
+                    if (getComputedStyle(twCheck).opacity === '0') {
+                        clearInterval(interval);
+                        twCheck.remove();
+                        resolve();
+                    } else if (attempts > 150) { // ניתוק בטיחות אחרי 7.5 שניות
+                        clearInterval(interval);
+                        twCheck.remove();
+                        resolve();
+                    }
+                }, 50);
+            });
 
-                checkTutorial();
-                updateInlineButtonsUI();
-                initGame();
+            // 3. רק כששני התנאים מתקיימים, אנחנו מציגים את המשחק
+            Promise.all([dataPromise, tailwindPromise])
+                .then(([[easy, hard]]) => {
+                    easyData = easy;
+                    hardData = hard;
+                    
+                    checkTutorial();
+                    updateInlineButtonsUI();
+                    initGame();
 
-            } catch (error) {
-                console.error("שגיאה בטעינה:", error);
-                const loader = document.getElementById('hard-loader');
-                loader.innerHTML = `
-                    <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
-                    <h2 style="font-size: 24px; font-weight: 900; margin: 0 0 10px 0;">שגיאה בטעינת הנתונים</h2>
-                    <p style="color: #94a3b8; font-size: 14px; margin: 0 0 20px 0;">לא הצלחנו למשוך את קבצי ה-JSON מהשרת.</p>
-                    <button onclick="window.location.reload()" style="background: #0891b2; color: white; padding: 10px 20px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer;">נסה שוב</button>
-                `;
-            }
+                    // הורדת מסך הטעינה והצגת האפליקציה באופן חלק
+                    const loader = document.getElementById('pure-loader');
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 300);
+
+                    const app = document.getElementById('game-app');
+                    app.style.visibility = 'visible';
+                    app.style.opacity = '1';
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('pure-loader').innerHTML = `
+                        <div style="font-size: 64px; margin-bottom: 20px;">⚠️</div>
+                        <h2 style="margin: 0 0 10px 0;">שגיאה בטעינת הנתונים</h2>
+                        <p style="color: #94a3b8; font-size: 14px; margin: 0 0 20px 0;">לא הצלחנו למשוך את קבצי ה-JSON.</p>
+                        <button onclick="window.location.reload()" style="background: #0891b2; color: white; padding: 10px 20px; border-radius: 20px; border: none; font-weight: bold; cursor: pointer;">נסה שוב</button>
+                    `;
+                });
         });
 
         function checkTutorial() {
             if (!localStorage.getItem('israelGameTutorialSeenV3')) { openTutorial(); }
         }
-        function openTutorial() { document.getElementById('tutorial-modal').classList.replace('hidden', 'flex'); }
+        function openTutorial() { showEl('tutorial-modal'); }
         function closeTutorial() { 
-            document.getElementById('tutorial-modal').classList.replace('flex', 'hidden');
+            hideEl('tutorial-modal');
             localStorage.setItem('israelGameTutorialSeenV3', 'true'); 
         }
 
-        function openEndGameModal() { document.getElementById('modal').classList.replace('hidden', 'flex'); }
-        function closeEndGameModal() { document.getElementById('modal').classList.replace('flex', 'hidden'); }
+        function openEndGameModal() { showEl('modal'); }
+        function closeEndGameModal() { hideEl('modal'); }
 
         /* =====================================================================
            שליטה מהירה במצבים (Inline)
@@ -432,10 +469,10 @@
             if (easyData.length === 0 && hardData.length === 0) return;
 
             closeEndGameModal();
-            document.getElementById('draw-screen').classList.replace('flex', 'hidden');
-            document.getElementById('place-screen').classList.replace('flex', 'hidden');
-            document.getElementById('draw-end-controls').classList.replace('flex', 'hidden');
-            document.getElementById('place-end-controls').classList.replace('flex', 'hidden');
+            hideEl('draw-screen');
+            hideEl('place-screen');
+            hideEl('draw-end-controls');
+            hideEl('place-end-controls');
             document.getElementById('draw-settlement-container').classList.remove('hidden');
             
             totalScore = 0;
@@ -463,11 +500,11 @@
             sessionSettlements = pool.slice(0, 8);
 
             if (mode === 'draw') {
-                document.getElementById('draw-screen').classList.replace('hidden', 'flex');
+                showEl('draw-screen');
                 document.getElementById('draw-score').innerText = '0';
                 initDrawMode();
             } else {
-                document.getElementById('place-screen').classList.replace('hidden', 'flex');
+                showEl('place-screen');
                 document.getElementById('place-bank-container').classList.remove('hidden');
                 initPlaceMode();
             }
@@ -494,9 +531,8 @@
         }
 
         function nextDrawRound() {
-            const prevPanel = document.getElementById('draw-prev-panel');
             if (drawMapSettlement) {
-                prevPanel.classList.remove('hidden');
+                showEl('draw-prev-panel');
                 const mapBtn = document.getElementById('draw-map-btn');
                 if (drawMapSettlement['lat'] || drawMapSettlement['קו רוחב']) {
                     mapBtn.classList.remove('hidden');
@@ -504,12 +540,12 @@
                 } else mapBtn.classList.add('hidden');
                 if(isDrawMapOpen) toggleDrawMap();
             } else {
-                prevPanel.classList.add('hidden');
+                hideEl('draw-prev-panel');
             }
 
             if (currentDrawIndex >= 8) { 
                 document.getElementById('draw-settlement-container').classList.add('hidden');
-                document.getElementById('draw-end-controls').classList.replace('hidden', 'flex');
+                showEl('draw-end-controls');
                 showEndGame(); 
                 return; 
             }
@@ -717,7 +753,7 @@
 
             document.getElementById('place-submit-btn').classList.add('hidden');
             document.getElementById('place-bank-container').classList.add('hidden');
-            document.getElementById('place-end-controls').classList.replace('hidden', 'flex');
+            showEl('place-end-controls');
 
             showEndGame();
         }
@@ -897,7 +933,7 @@
         function showOptimalGame() {
             document.getElementById('optimal-score').innerText = globalOptimalScore.toLocaleString();
             document.getElementById('optimal-history').innerHTML = globalOptimalHtml;
-            document.getElementById('optimal-modal').classList.replace('hidden', 'flex');
+            showEl('optimal-modal');
         }
 
         /* =====================================================================
