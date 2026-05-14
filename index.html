@@ -26,6 +26,9 @@
     </script>
 
     <style>
+        /* תיקון קריטי למובייל - מבטיח שאלמנטים שצריכים להיות מוסתרים יוסתרו מיד */
+        .hidden { display: none !important; }
+        
         body { font-family: 'Heebo', sans-serif; background-color: #f8fafc; user-select: none; -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
         .scale-tap:active { transform: scale(0.96); }
         .selected-bank-item { outline: 3px solid #0891b2; background-color: #e0f2fe; transform: scale(1.05); }
@@ -36,7 +39,8 @@
 </head>
 <body class="min-h-screen flex flex-col items-center p-4">
 
-    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md z-[2000] flex flex-col items-center justify-center text-center px-4 transition-opacity duration-300">
+    <!-- מסך טעינה עם הגדרות תצוגה קבועות מראש למניעת קפיצות -->
+    <div id="loading-overlay" style="display: flex; position: fixed; inset: 0; background-color: rgba(15, 23, 42, 0.95); z-index: 2000;" class="backdrop-blur-md flex flex-col items-center justify-center text-center px-4 transition-opacity duration-300">
         <div class="text-6xl animate-bounce mb-4">📍</div>
         <h2 class="text-3xl font-black text-white mb-2">טוען נתונים...</h2>
         <p class="text-slate-300 font-medium text-sm">מכין את מפת היישובים של ישראל</p>
