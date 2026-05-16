@@ -138,7 +138,7 @@ function initGame() {
 }
 
 /* =====================================================================
-   מצב הגרלה
+   מצב הגרלה (Draw Mode)
    ===================================================================== */
 function initDrawMode() {
     document.getElementById('draw-dots').innerHTML = Array(8).fill(0).map((_,i) => `<div id="draw-dot-${i}" class="w-3 h-3 rounded-full bg-slate-200 shadow-inner transition-all"></div>`).join('');
@@ -169,13 +169,18 @@ function selectDrawCategory(catId) {
     if (usedDrawCats.has(catId)) return;
     const currentSettlement = sessionSettlements[currentDrawIndex];
     const catObj = categories.find(c => c.id === catId);
-    usedDrawCats.add(catId); drawMapSettlement = currentSettlement;
-
+    
+    // התיקון הקריטי: מחשב את המקום הטוב ביותר אך ורק מהקטגוריות שעדיין פנויות (או זו שכרגע נבחרה)
     let bestRank = Infinity, bestCatLabel = "";
     categories.forEach(c => {
-        let r = parseInt(String(currentSettlement[c.id] || "1221").replace(/,/g, '')) || 1221;
-        if (r < bestRank) { bestRank = r; bestCatLabel = c.label; }
+        if (!usedDrawCats.has(c.id) || c.id === catId) {
+            let r = parseInt(String(currentSettlement[c.id] || "1221").replace(/,/g, '')) || 1221;
+            if (r < bestRank) { bestRank = r; bestCatLabel = c.label; }
+        }
     });
+
+    usedDrawCats.add(catId); 
+    drawMapSettlement = currentSettlement;
 
     let actualRank = parseInt(String(currentSettlement[catId] || "1221").replace(/,/g, '')) || 1221;
     totalScore += Math.min(actualRank, MAX_PENALTY);
@@ -200,13 +205,11 @@ function toggleDrawMap() {
         wrapper.className = "w-full rounded-xl overflow-hidden transition-all duration-300 h-40 opacity-100 mt-2 relative";
         btn.innerHTML = '❌ סגור מפה';
         setTimeout(() => {
-            if (drawMap) { drawMap.remove(); drawMap = null; }
-            drawMap = L.map('draw-map', { zoomControl: false, scrollWheelZoom: false, dragging: true }).setView([31.5, 34.8], 7); 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(drawMap);
-            
+            if(!drawMap) { drawMap = L.map('draw-map', { zoomControl: false, scrollWheelZoom: false, dragging: true }).setView([31.5, 34.8], 7); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(drawMap); }
             drawMap.invalidateSize();
             const lat = drawMapSettlement['lat'] || drawMapSettlement['קו רוחב'], lon = drawMapSettlement['lon'] || drawMapSettlement['קו אורך'];
             if(lat && lon) {
+                if(drawMarker) drawMap.removeLayer(drawMarker);
                 drawMarker = L.marker([lat, lon]).addTo(drawMap); drawMap.flyTo([lat, lon], 11, { animate: true, duration: 1.2 });
             }
         }, 300);
@@ -260,17 +263,13 @@ let globalOptimalScore = 0, globalOptimalHtml = "";
 function showEndGame() {
     openEndGameModal(); 
     document.getElementById('final-score').innerText = totalScore.toLocaleString();
+    if (totalScore < bestScore) { bestScore = totalScore; localStorage.setItem(getBestScoreKey(), totalScore); document.getElementById('best-score-display').innerText = totalScore.toLocaleString(); showEl('new-record-badge', 'block'); } else hideEl('new-record-badge', 'block');
     
-    if (totalScore < bestScore) { 
-        bestScore = totalScore; localStorage.setItem(getBestScoreKey(), totalScore); 
-        document.getElementById('best-score-display').innerText = totalScore.toLocaleString(); 
-        showEl('new-record-badge', 'block'); 
-    } else hideEl('new-record-badge', 'block');
-    
-    // חישוב המשחק האופטימלי כדי שנוכל להזין את הנתונים למפה
+    // חישוב אופטימלי ומילוי נתונים להשוואה בתוך ה-history
     calculateOptimalGameData();
     totalScore === globalOptimalScore ? showEl('perfect-match-ribbon', 'block') : hideEl('perfect-match-ribbon', 'block');
     
+    // מילוי טבלת הסיכום עם קישור למפה
     document.getElementById('round-history').innerHTML = gameHistory.map((h, i) => `
         <div class="flex justify-between border-b border-slate-200 pb-1 italic cursor-pointer hover:bg-slate-200 transition-colors px-2 py-1 rounded-md" onclick="focusEndMapMarker(${i})">
             <span>${h.icon} <b>${h.name}</b> (${h.catLabel})</span>
@@ -278,7 +277,8 @@ function showEndGame() {
         </div>`).join('');
     
     setTimeout(() => {
-        if (endMapObj) { endMapObj.remove(); endMapObj = null; }
+        const mapContainer = document.getElementById('end-map');
+        if(mapContainer._leaflet_id) mapContainer.outerHTML = '<div id="end-map" class="absolute inset-0 z-10"></div>';
         endMapObj = L.map('end-map', { zoomControl: true, dragging: true, scrollWheelZoom: true });
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(endMapObj);
         
@@ -288,6 +288,7 @@ function showEndGame() {
             if(lat && lon) {
                 const marker = L.marker([lat, lon]).addTo(endMapObj);
                 
+                // יצירת פופאפ השוואתי מלא
                 let allDataHtml = `<div class="text-right text-[10px] mt-2 pt-2 border-t border-slate-200 space-y-1 h-28 overflow-y-auto pr-1">`;
                 categories.forEach(c => {
                     let rankVal = parseInt(String(h.obj[c.id] || "1221").replace(/,/g, '')) || 1221;
@@ -295,25 +296,13 @@ function showEndGame() {
                     allDataHtml += c.label === h.catLabel ? `<div class="text-primary font-bold bg-primary/10 rounded px-1 py-0.5">${c.icon} ${c.label}: ${formatted} (#${rankVal})</div>` : `<div class="text-slate-600 px-1">${c.icon} ${c.label}: ${formatted} (#${rankVal})</div>`;
                 });
                 allDataHtml += `</div>`;
-
-                let optimalDisplayHtml = h.catLabel === h.optimalCatLabel 
-                    ? `<div class="text-success font-bold mt-0.5">✅ בחרת בשידוך האופטימלי!</div>` 
-                    : `<div class="text-slate-500 mt-0.5 text-[10px]">האופטימלי: ${h.optimalCatIcon} ${h.optimalCatLabel} <span class="font-bold">(${h.optimalRankText})</span></div>`;
-
-                const popupContent = `<div class="text-center min-w-[160px]" dir="rtl">
-                    <b class="text-sm text-slate-800">${h.name}</b>
-                    <div class="flex flex-col items-center justify-center text-[11px] mt-1 mb-1" dir="rtl">
-                        <div class="text-primary font-bold">בחרת: ${h.icon} ${h.catLabel} (${h.rankText})</div>
-                        ${optimalDisplayHtml}
-                    </div>
-                    ${allDataHtml}
-                </div>`;
-
-                marker.bindPopup(popupContent);
+                
+                let optTxt = h.catLabel === h.optimalCatLabel ? `<div class="text-success font-bold mt-0.5">✅ בחרת בשידוך האופטימלי!</div>` : `<div class="text-slate-500 mt-0.5 text-[10px]">האופטימלי: ${h.optimalCatIcon} ${h.optimalCatLabel} <span class="font-bold">(${h.optimalRankText})</span></div>`;
+                
+                marker.bindPopup(`<div class="text-center min-w-[160px]" dir="rtl"><b class="text-sm text-slate-800">${h.name}</b><div class="flex flex-col items-center justify-center text-[11px] mt-1 mb-1" dir="rtl"><div class="text-primary font-bold">בחרת: ${h.icon} ${h.catLabel} (${h.rankText})</div>${optTxt}</div>${allDataHtml}</div></div>`);
                 bounds.push([lat, lon]); endMarkers.push(marker);
             } else endMarkers.push(null);
         });
-        
         endMapObj.invalidateSize();
         bounds.length > 0 ? endMapObj.fitBounds(bounds, { padding: [20, 20], maxZoom: 12 }) : endMapObj.setView([31.5, 34.8], 7);
     }, 300);
@@ -343,9 +332,7 @@ function calculateOptimalGameData() {
     globalOptimalHtml = bestAssignment.map((catIdx, sIdx) => {
         const s = sessionSettlements[sIdx], cat = categories[catIdx], actualRank = parseInt(String(s[cat.id] || "1221").replace(/,/g, '')) || 1221, rText = actualRank > MAX_PENALTY ? `מקום ${actualRank} (${MAX_PENALTY} נק')` : `מקום ${actualRank}`;
         const userChoice = gameHistory.find(h => h.name === s["שם יישוב"]);
-        
         if (userChoice) { userChoice.optimalCatLabel = cat.label; userChoice.optimalCatIcon = cat.icon; userChoice.optimalRankText = rText; }
-        
         let comparison = userChoice ? (userChoice.catLabel === cat.label ? `<div class="text-[10px] text-success font-bold mt-1 bg-success/10 inline-block px-2 py-0.5 rounded-full">✅ שיחקת אותה! בחרת אופטימלי</div>` : `<div class="text-[10px] text-slate-500 mt-1">במשחק שלך: ${userChoice.icon} ${userChoice.catLabel} <span class="text-danger font-bold">(${userChoice.rankText})</span></div>`) : "";
         return `<div class="border-b border-slate-200 pb-2 pt-1.5 flex flex-col items-start"><div class="flex justify-between w-full items-center"><span>${cat.icon} <b>${s["שם יישוב"]}</b> (${cat.label})</span><span class="font-black text-success">${rText}</span></div>${comparison}</div>`;
     }).join('');
@@ -355,12 +342,14 @@ function showOptimalGame() { document.getElementById('optimal-score').innerText 
 
 function shareResults() {
     let details = gameHistory.map(h => `${h.actualRank <= 150 ? '🟩' : h.actualRank <= 400 ? '🟨' : '🟥'} ${h.name} (${h.catLabel}) - מקום ${h.actualRank}`).join('\n');
-    const text = `משחק היישובים V3 📍\nמצב: ${diff === 'easy' ? 'קל' : 'קשה'} | ${mode === 'draw' ? 'הגרלה' : 'הצבה'}\nתוצאה סופית: ${totalScore} נק'\n${totalScore === globalOptimalScore ? `\n🏆 השגתי את השידוך המושלם!\n` : `\n`}\n${details}\n\n${window.location.href}`;
+    let perfectMatchText = (totalScore === globalOptimalScore) ? `\n🏆 השגתי את השידוך המושלם!\n` : `\n`;
+    const text = `משחק היישובים V3 📍\nמצב: ${diff === 'easy' ? 'קל' : 'קשה'} | ${mode === 'draw' ? 'הגרלה' : 'הצבה'}\nתוצאה סופית: ${totalScore} נק'${perfectMatchText}\n${details}\n\n${window.location.href}`;
     navigator.share ? navigator.share({ text }) : (navigator.clipboard.writeText(text), alert("הטקסט הועתק ללוח!"));
 }
 
 function shareOptimalResults() {
     const diffScore = totalScore - globalOptimalScore;
-    const text = `משחק היישובים 📍 - אתגר השידוך המושלם\n\nציון שלי: ${totalScore}\nציון אופטימלי: ${globalOptimalScore}\n${diffScore === 0 ? "הגעתי לשידוך המושלם בדיוק! 🏆" : `הייתי במרחק של ${diffScore} נקודות מהשידוך המושלם! 😅`}\n\nשתפו גם אתם:\n${window.location.href}`;
+    let comparisonText = diffScore === 0 ? "הגעתי לשידוך המושלם בדיוק! 🏆" : `הייתי במרחק של ${diffScore} נקודות מהשידוך המושלם! 😅`;
+    const text = `משחק היישובים 📍 - אתגר השידוך המושלם\n\nציון שלי: ${totalScore}\nציון אופטימלי: ${globalOptimalScore}\n${comparisonText}\n\nנסו בעצמכם:\n${window.location.href}`;
     navigator.share ? navigator.share({ text }) : (navigator.clipboard.writeText(text), alert("הטקסט הועתק ללוח!"));
 }
